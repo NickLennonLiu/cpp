@@ -174,4 +174,88 @@ yes/no : **派生类对象**能否访问基类成员(//即能否调用函数或能读写数据)
 
 ## 重写隐藏与重载
 
-To be continued...
+重载Overload-->静态多态，参数必须不同，作用域相同  
+重写隐藏Redefining-->参数可以不同
+
+### 重写隐藏
+
+屏蔽基类中该成员函数的任一重载函数
+
+可以通过`using ClassName::MemberName;`在派生类中恢复指定的基类成员函数
+
+Example 重写隐藏
+
+```cpp
+class T{};
+class Base{
+public:
+    void f(){}
+    void f(int i){}
+    void f(double d){}
+    void f(T){}
+};
+class Derive : public Base {
+public:
+    void f(int i) {}    //重写隐藏
+};
+int main(){
+    Derive d;
+    d.f(10);
+    d.f(4.9); // ——> d.f(4);
+    // d.f();       // compiling error
+    // d.f(T());    // compiling error
+    return 0;
+}
+```
+Example 恢复基类成员
+
+```cpp
+class T{};
+class Base{
+public:
+    void f(){}
+    void f(int i){}
+    void f(double d){}
+    void f(T){}
+};
+class Derive : public Base {
+public:
+    using Base::f;      // <------
+    void f(int i) {}    //重写隐藏
+};
+int main(){
+    Derive d;
+    d.f(10);            // From Derive           
+    d.f(4.9);           // From Base
+    d.f();              // From Base
+    d.f(T());           // From Base
+    return 0;
+}
+```
+
+### using 关键字
+
+- 继承基类构造函数
+- 恢复被屏蔽的基类成员函数
+- 指示命名空间 `using namespace std;`
+- 将另一个命名空间的成员引入当前命名空间 `using std::cout; cout<<endl;`
+- 定义类型别名`using a = int;` 
+
+## 多重继承
+
+派生类同时继承多个基类
+```cpp
+class File{};
+class InputFile: public File{};
+class OutputFile: public File{};
+class IOFile: public InputFile, public OutputFile{};
+```
+### 存在的问题
+
+- 数据存储  
+  继承的多个基类若是同一个类的继承，则来自该基类的数据成员会有多个副本，可能带来数据冗余
+- 二义性  
+  同名成员问题--->编译错误
+
+
+

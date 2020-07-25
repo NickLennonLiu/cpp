@@ -181,7 +181,7 @@ int main(){
 
 ## 虚函数
 
-对于**被派生类重新定义的成员函数**，若它在基类中被声明为**虚函数**，则**通过基类指针或引用调用该成员函数**时，编译器将根据所指（或引用）对象的实际类型决定是调用基类中的函数，还是调用派生类重写的函数
+对于**被派生类重新定义的成员函数**，若它在基类中被声明为**虚函数**，则通过**基类指针或引用**调用该成员函数时，编译器将根据所指（或引用）对象的实际类型决定是调用基类中的函数，还是调用派生类重写的函数
 
 ```cpp
 class Base {
@@ -220,7 +220,11 @@ int main() {
 
 一般来说派生类虚函数的返回值应当与基类相同
 
-或者是Covariant的，如Base& <-> Derive&, Base\* <-> Derive\*
+或者是Covariant的：（如Base& <-> Derive&, Base\* <-> Derive\*）
+
+- 都是指针（不能是多级指针）、都是左值引用或都是右值引用，且在Derive::f生命时，Derive::f的返回类型必须是Derive或其他已经完整定义的类型
+- ReturnTypeBase中被引用或指向的类是ReturnYpeDerive中被引用或指向的类的祖先类
+- Base::f的返回类型相比Derive::f的返回类型同等或更加cv-qualified
 
 ### 虚函数表
 
@@ -331,3 +335,97 @@ int main() {
 
 **重要原则**:**总是将基类的析构函数设置为虚析构函数**
 
+## 重载、重写覆盖与重写隐藏
+
+### 重载 overload
+
+函数名必须相同， 函数参数必须不同， 作用域**相同**
+
+### 重写覆盖 override
+
+派生类重新定义基类中的**虚函数**，函数名**必须相同**，函数参数**必须相同**，返回值一般相同
+
+派生类的虚函数表中原基类的虚函数指针会被派生类中重新定义的虚函数指针覆盖掉
+
+### 重写隐藏 redefining
+
+派生类重新定义基类中的函数，函数名相同，但是 **参数不同** *或* **基类的函数不是虚函数**。
+
+虚函数表**不会发生覆盖**
+
+---
+
+||重载overload|重写隐藏redefining|重写覆盖override|
+|----|----|----|----|
+|作用域|相同（同一个类中）|不同（派生类和基类）|不同（派生类和基类）|
+|函数名|相同|相同|相同|
+|函数参数|不同|相同/不同|相同|
+|其他要求||如果函数参数相同，则基类函数不能为虚函数|基类函数为虚函数|
+
+---
+
+### Example
+```cpp
+class Base{
+public:    
+  	virtual void foo(){cout<<"Base::foo()"<<endl;}
+  	virtual void foo(int ){cout<<"Base::foo(int )"<<endl;} ///重载 
+  	void bar(){};
+};
+class Derived1 : public Base {
+public:
+    void foo(int ) {cout<<"Derived1::foo(int )"<<endl;} 
+    /// 是重写覆盖
+};
+class Derived2 : public Base {
+public:
+    void foo(float ) {cout<<"Derived2::foo(float )"<<endl;}
+    /// 误把参数写错了，不是重写覆盖，是重写隐藏
+};
+int main() {    
+    Derived1 d1;
+    Derived2 d2;
+    Base* p1 = &d1;
+  	Base* p2 = &d2;
+  	//d1.foo(); 	///由于派生类都定义了带参数的foo，基类foo()对实例不可见
+  	//d2.foo();
+  	p1->foo();  	///但是虚函数表中有继承自基类的foo()虚函数
+  	p2->foo();
+  	d1.foo(3); 		///重写覆盖
+  	d2.foo(3.0);   	///调用的是派生类foo(float )
+	p1->foo(3);  	///重写覆盖，虚函数表中是派生类的 foo(int )    
+	p2->foo(3.0);   ///重写隐藏，虚函数表中是继承自基类 foo(int )
+}
+
+```
+
+>Output:  
+Base::foo()  
+Base::foo()  
+Derived1::foo(int )  
+Derived2::foo(float )  
+Derived1::foo(int )  
+Base::foo(int )
+
+## override 和 final 关键字
+
+### override
+
+利用 **override** 关键字明确告诉编译器：“一个函数是对基类中一个**虚函数**的重写覆盖”，编译器将对此进行检查，只有条件满足时才能通过编译
+
+### final
+
+在虚函数的声明或定义中：
+利用 **final** 关键字确保函数为虚且不可被派生类重写
+
+在类定义中：
+**final** 指定此类不可被继承
+
+--- 
+当修饰函数时，override和final都只能修饰**虚函数**
+
+## OOP核心思想
+
+- 数据抽象：类的**接口**与**实现**分离
+- 继承：建立相关类型的**层次关系**
+- 动态绑定：**统一使用基类指针**，实现多态行为

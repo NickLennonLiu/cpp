@@ -305,3 +305,108 @@ Derived2::step2
 Base::step3  
 ===  
 
+## 函数模板与类模板
+
+模板
+- 函数模板
+- 类模板
+- 成员函数模板
+
+### 函数模板
+
+`template <typename T> ReturnType Func(Args);`
+
+`template <class T> ReturnType Func(Args);`
+
+在调用时编译器自动推导出实际参数的类型
+
+```cpp
+template <typename T>
+T sum(T a,T b){return a+b;}
+
+cout << sum(9,2.1);   //编译错误，参数类型不一致，无法推导
+cout<< sum<int>(9,2.1); //手工指定类型
+```
+
+### 类模板
+
+```cpp
+template <typename T> class A{
+  T data;
+public:
+  void print1(){cout << data << endl;}
+  void print2();      // 类外定义
+};
+
+template<typename T>    // 类外定义
+void A<T>::print2() {cout << data << endl;}
+
+int main(){
+  A<int> a;
+  a.print1();
+}
+
+```
+
+“模板参数”
+- 类型参数： typename或class
+- 非类型参数： 整数，枚举，指针（指向对象或函数），引用（引用对象或函数）。
+  ```cpp
+  template<typename T, unsigned size>
+  class array{
+    T elems[size];
+    ...
+  };
+  
+  array<char, 10> array0;
+  ```
+### 成员函数模板
+
+普通类
+```cpp
+class normal_class {
+public:
+  int value;
+  template<typename T> void set(T const& v) {
+    value = int(v);
+  }   /// 在类内定义
+  template<typename T> T get();
+};
+
+template<typename T>    /// 在类外定义
+T normal_class::get() {
+  return T(value);
+}
+```
+模板类
+```cpp
+template<typename T0> class A{
+  T0 value;
+public:
+  template<typename T1> void set(T1 const& v){
+    value = T0(v);
+  }     /// 类内定义
+  template<typename T1> T1 get();
+};
+template<typename T0> template<typename T1>
+T1 A<T0>::get(){ return T1(value);}   // 类外定义
+
+/*注意不能写成
+template<typename T0, typename T1>
+T1 A<T0>::get(){ return T1(value);}   // 类外定义
+*/
+```
+
+模板使用中通常可以自动推导类型，必要时也可以指定，方法是在调用的东西的名称后加上 <类型名>
+
+### 模板原理
+
+在编译期进行对模板的处理，这意味着所有模板参数必须在编译期确定，不能使用变量
+
+这意味着
+
+模板库必须在头文件中实现，不可以分开编译
+
+### 模板与多态
+
+模板也是多态，只不过是**静**多态（编译时）

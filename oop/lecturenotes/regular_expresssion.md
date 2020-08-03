@@ -141,7 +141,101 @@ version10
 
 Example:
 
-To be continue...
+```cpp
+#include <iostream>
+#include <string>
+#include <regex>
+using namespace std;
+
+int main() {
+  string s("this subject has a submarine");
+  regex e(R"((sub)([\S]*))");
+  smatch sm;
+  //每次搜索时当仅保存第一个匹配到的子串
+  while(regex_search(s,sm,e)){
+    for (unsigned i=0; i<sm.size(); ++i)
+      cout << "[" << sm[i] << "] ";
+    cout << endl;
+    s = sm.suffix().str();  // suffix得到匹配部分的后面部分
+  }
+}
+```
+
+### 替换
+
+`regex_replace(s, re, s1)` 替换s中**所有**匹配正则表达式re的子串，并替换成s1
+
+- s1可以是一个普通文本
+- 也可以使用一些**特殊符号**，代表捕获的分组  
+  **\$\&** 代表re所有匹配成功的**子串**  
+  **\$1, \$2** 代表re匹配的**子串中的**第1/2个**分组**
+
+**Example**
+
+```cpp
+#include <iostream>
+#include <string>
+#include <regex>
+using namespace std;
+
+int main() {
+  string s("this subject has a submarine");
+  regex e(R"((sub)([\S]*))");
+  //regex_replace返回值即为替换后的字符串 
+  cout << regex_replace(s,e,"SUBJECT") << "\n";
+  //$&表示所有匹配成功的部分，[$&]表示将其用[]括起来
+  cout << regex_replace(s,e,"[$&]") << "\n";
+  //$i输出e中第i个括号匹配到的值
+  cout << regex_replace(s,e,"$1") << "\n";
+  cout << regex_replace(s,e,"$1 and [$2]") << "\n";
+}
+/*
+输出：
+this SUBJECT has a SUBJECT
+this [subject] has a [submarine]
+this sub has a sub
+this sub and [ject] has a sub and [marine]
+*/
+```
+
+## More on re...
+
+### 预查
+
+- **正向预查**  
+  >现在，我们假设需要仅匹配 Windows，不匹配后面的版本号，并且要求 Windows 后面的版本号只能是 数字类型，换言之，XP 和 Vista 不能被匹配，  
+  在正则表达式中，可以使用 正向预查 来解决这个问题。本例中，写法是：“Windows(?= [\d.]+\b)”。  
+  它的语法是**在 子模式内部 前面加“?=”**，表示的意思是：首先，要匹配的文本**必须满足此子模式前面的表达式**(本例，“Windows ”)；其次，**此子模式不参与匹配**。  
+  你也可以这样理解上面的匹配过程:  
+  >1. 先进行普通匹配：Windows ([\d.]+\b)
+  >2. 然后从匹配文本中**将 子模式 内的文本排除掉**。
+  
+  子模式内的文本由于不参与匹配，所以可以参与到后面的匹配中！
+- **反向预查**
+  就是子模式在表达式的前面
+
+||正向|反向|
+|----|----|----|
+|**肯定**|xxx(?=pattern)|(?<=pattern)xxx|
+|**否定**|xxx(?!pattern)|(?<!pattern)xxx|
 
 
+### 后向引用
 
+\b(\w+)\b\s+\1\b 匹配重复两遍的单词
+
+比如go go 或 kitty kitty
+
+![avatar](pics/re_back_reference.png)
+
+### 贪婪与懒惰
+
+默认多次重复为贪婪匹配，即匹配次数最多
+
+在重复模式后加？可以变为懒惰匹配，即匹配次数最少
+
+|贪婪型|懒惰型|
+|----|----|
+|\*|\*?|
+|+|+?|
+|{n,}|{n,}?|

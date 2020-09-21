@@ -1,4 +1,4 @@
-#include <iostream>
+//#include <iostream>
 #include <cmath>
 #include <stdio.h>
 using namespace std;
@@ -52,7 +52,12 @@ void change(Complex *f, int n)
     for (int i = 0; i < n; i++)
     {
         if (i < rev[i])
-            swap(f[i], f[rev[i]]);
+        {
+            Complex tmp = f[i];
+            f[i] = f[rev[i]];
+            f[rev[i]] = tmp;
+        }
+            
     }
 }
 
@@ -108,7 +113,7 @@ void getNum(Complex num[], int &n){
 int main()
 {
     int n;
-    cin >> n;
+    scanf("%d", &n);
     for(int i = 0;i < n;i++){
         getNum(a, alen);
         getNum(b, blen);
@@ -117,8 +122,7 @@ int main()
         while(len < (alen*2) || len < (blen*2)) len <<= 1;
 
         for(int j = alen; j < len ;++ j) a[j] = Complex(0,0);
-        for (int j = blen; j < len; ++j)
-            b[j] = Complex(0, 0);
+        for (int j = blen; j < len; ++j) b[j] = Complex(0,0);
 
         DFT(a, len, 1), DFT(b, len, 1);
 
@@ -127,22 +131,22 @@ int main()
         DFT(a, len, -1);
 
         for(int j = 0; j < len; j++){
-            s[j] = int(a[j].re + 0.5);
+            s[j] = 0;
         }
 
         for(int j = 0;j < len;j++)
         {
+            s[j] += int(a[j].re + 0.5);
             s[j + 1] += s[j] / 10;
             s[j] %= 10;
         }
 
-        int clen = alen + blen + 1;
-        while(s[clen] == 0 && clen >=0) --clen;
+        int clen = alen + blen - 1;
+        while(s[clen] == 0 && clen >0) --clen;
         while(clen>=0)
         {
             printf("%d", s[clen--]);
-            cout << s[clen--];
         }        
-        cout << endl;
+        printf("\n");
     }
 }

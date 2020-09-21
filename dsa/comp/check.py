@@ -33,10 +33,10 @@ while True:
         shell=True).check_returncode()
 
     run(sys.argv[1], stdin=open("input.txt"), stdout=open("output1.txt", "w"),
-        timeout=1., shell=True).check_returncode()
+        timeout=3.5, shell=True).check_returncode()
 
     run(sys.argv[2], stdin=open("input.txt"), stdout=open("output2.txt", "w"),
-        timeout=1., shell=True).check_returncode()
+        timeout=10., shell=True).check_returncode()
 
     if not check_ans("output1.txt", "output2.txt"):
         print("Wrong")

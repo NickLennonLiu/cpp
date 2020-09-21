@@ -1,5 +1,5 @@
-
 #include <stdio.h>
+#include <cstring>
 using namespace std;
 
 #define MAX_LEN 100000
@@ -50,7 +50,7 @@ void bigNumMultiplication(const long long a[],const int alen,const long long b[]
     
 }
 
-void printDigit(int n, bool preZero)
+inline void printDigit(int n, bool preZero)
 {
     if(!preZero) printf("%d", n);
     else for (int i = 1000; i; i /= 10)
@@ -60,7 +60,7 @@ void printDigit(int n, bool preZero)
     }
 }
 
-void outputNum(const long long n[], const int len)
+inline void outputNum(const long long n[], const int len)
 {
     for(int i = len-1; i>=0; --i)
     {
@@ -72,11 +72,13 @@ void outputNum(const long long n[], const int len)
 int n;
 long long a[MAX_LEN/4], b[MAX_LEN/4], r[MAX_LEN/2];
 int alen = 0, blen = 0, rlen = 0;
+char x[MAX_LEN], y[MAX_LEN];
 
 int main()
 {
     scanf("%d", &n);
     for(int i = 0;i < n;i++){
+        scanf("%s %s", x, y);
         getNum(a, alen);
         getNum(b, blen);
         bigNumMultiplication(a, alen, b, blen, r, rlen);

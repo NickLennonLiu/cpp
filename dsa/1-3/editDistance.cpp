@@ -14,11 +14,12 @@ int SED(char A[], char B[], int a, int b, int k)
     for(int j = 1; j <= b; ++j)
     {
         cur[0] = j;
-        min_time = j + 1;
+        min_time = j;
         for(int i = 1; i <= a; ++i)
         {
             cur[i] = min(pre[i] + 1,cur[i-1] + 1);
             cur[i] = min(cur[i], pre[i-1] + 2 * (A[i-1] != B[j-1]));
+            //if(cur[i] - min_time > k) break;
             min_time = min(min_time, cur[i]);
         }
         for(int i = 1; i <= a; ++i) {

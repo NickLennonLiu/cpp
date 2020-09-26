@@ -2,7 +2,7 @@
 #include <cstring>
 
 char as[10001], bs[10001];
-__int128 a[1251], b[1251], c[1251];
+long long a[1251], b[1251], c[1251];
 int alen, blen, clen;
 int n;
 
@@ -14,28 +14,28 @@ int main()
         scanf("%s %s", as, bs);
         int al = strlen(as), bl = strlen(bs);
 
-        alen = (al % 11) ? al / 11 + 1 : al / 11;
-        long long num = 0;
+        alen = (al % 8) ? al / 8 + 1 : al / 8;
+        int num = 0;
         for(int j = 0; j < alen; ++j)
         {
-            int p = al - 11 * (j + 1);
+            int p = al - 8 * (j + 1);
             if (p < 0) p = 0;
             num = 0;
-            while (p < al - 11 * j)
+            while (p < al - 8 * j)
             {
                 num = num * 10 + as[p++] - '0';
             }
             a[j] = num;
         }
 
-        blen = (bl % 11) ? bl / 11 + 1 : bl / 11;
+        blen = (bl % 8) ? bl / 8 + 1 : bl / 8;
         for (int j = 0; j < blen; ++j)
         {
-            int p = bl - 11 * (j + 1);
+            int p = bl - 8 * (j + 1);
             if (p < 0)
                 p = 0;
             num = 0;
-            while (p < bl - 11 * j)
+            while (p < bl - 8 * j)
             {
                 num = num * 10 + bs[p++] - '0';
             }
@@ -45,31 +45,27 @@ int main()
         for (int i = 0; i < 1251; ++i)
             c[i] = 0;
 
-        int idx = 0;
-        __int128 result ,next = 0;
-        for (int k = 0; k < alen; ++k)
+        clen = alen + blen - 1;
+        for (int i = 0; i < clen; ++i)
         {
-            next = 0;
-            for (int j = 0; j < blen; ++j)
+            for (int j = 0; j <= i; ++j)
             {
-                idx = k + j;
-                result = a[k] * b[j] + next + c[idx];
-                c[idx] = result % 1000000000;
-                next = result / 1000000000;
+                c[i] += a[j] * b[i - j];
             }
-            c[k + blen] += next;
+            if (c[i] >= 100000000)
+            {
+                c[i + 1] += c[i] / 100000000;
+                c[i] %= 100000000;
+            }
         }
-        c[alen + blen] = next;
-        clen = (alen + blen - 1) + (next > 0);
+        clen += (c[clen] && 1);
 
         for (int j = clen - 1; j >= 0; --j)
         {
-            //printDigit(n[i], (i != (clen - 1)));
             if(j == (clen-1) ) printf("%lld", c[j]);
-            else for (long long k = 10000000000; k; k /= 10)
+            else for (int k = 10000000; k; k /= 10)
             {
-                printf("%d", c[j]/k);
-                c[j] -= (c[j] / k) * k;
+                printf("%d", (c[j]/k)%10);
             }
         }
         printf("\n");

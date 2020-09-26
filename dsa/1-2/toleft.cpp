@@ -1,15 +1,15 @@
 #include <stdio.h>
 
 // m: x轴, n: y轴   返回真：会有交点，返回假：不会有交点
-inline bool toLeft(int lx, int ly, int px, int py)
+inline bool toLeft(long long lx, long long ly, long long px, long long py)
 {
     return ((-lx * py - ly * (px - lx)) <= 0);
 }
 
-int n, m, x, y;
-int lx[200001], ly[200001];
+long long n, m, x, y;
+long long lx[200001], ly[200001];
 
-void quickSort(int *s, int *t)
+void quickSort(long long *s, long long *t)
 {
     if (s == t - 1 || s == t)
         return;
@@ -54,7 +54,7 @@ int main()
     scanf("%d", &m);
     for(int i = 0;i < m;++i)
     {
-        scanf("%d %d", &x, &y);
+        scanf("%lld %lld", &x, &y);
         printf("%d\n",bisearch(0,n));
     }
     return 0;

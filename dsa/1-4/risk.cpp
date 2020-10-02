@@ -4,7 +4,7 @@ using namespace std;
 /*
 Honor Code:
 - Discussed with:
-关于根据p,q查询低风险/中风险天数的二分查找方法，曾与贾启珑讨论
+
 - Reference:
 DSA2020Fall lecturenote 04.S+Q.XA.Steap+Queap.pdf
 */

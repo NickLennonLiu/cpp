@@ -1,50 +1,41 @@
-struct queue
+#pragma once
+
+#include "List.h"
+
+template <typename T>
+class Queue : public List<T>
 {
-    int elems[1000002];
-    int rear, front;
-
-    queue()
-        : rear(0), front(0)
+public:
+    Queue()
+        : List<T>()
     {
     }
-
-    void dequeue(int n)
+    ~Queue()
     {
-        front = front + n;
+        List<T>::~List();
     }
-    void enqueue(int e)
+    void push_back(const T e)
     {
-        elems[rear] = e;
-        rear = rear + 1;
+        List<T>::insertAsLast(e);
     }
-};
-
-struct queap
-{
-    queue p, q; // p:维护最大值的队列 q:正常队列
-
-    void enqueue(int e)
+    void push_front(const T e)
     {
-        p.enqueue(e);
-        q.enqueue(e);
-        int x = p.rear - 1;
-        while (x >= 0 && p.elems[x] <= e)
-        {
-            p.elems[x] = e;
-            if (x == p.front)
-                break;
-            x = x - 1;
-        }
+        List<T>::insertAsFirst(e);
     }
-
-    void dequeue(int n)
+    T pop_front()
     {
-        p.dequeue(n);
-        q.dequeue(n);
+        return List<T>::remove(List<T>::first());
     }
-
-    int getMax()
+    T pop_back()
     {
-        return p.elems[p.front];
+        return List<T>::remove(List<T>::last());
+    }
+    T front()
+    {
+        return List<T>::first()->ListNode<T>::data();
+    }
+    T back()
+    {
+        return List<T>::last()->ListNode<T>::data();
     }
 };

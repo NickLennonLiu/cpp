@@ -3,12 +3,12 @@ struct maxQueap
     int size;
     int *maxque;
     int front, rear;
-    myQueap(int size)
+    maxQueap(int size)
         : size(size), front(0), rear(0)
     {
         maxque = new int[size];
     }
-    ~myQueap() { delete[] maxque; }
+    ~maxQueap() { delete[] maxque; }
 
     void enqueue(int e)
     {

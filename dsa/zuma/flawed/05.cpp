@@ -34,9 +34,6 @@ int main() {
         cin >> rank >> color;
         a.insert(a.cbegin() + min(rank, (int)a.size()), color);
         play(rank);
-
-        //debug
-        cout <<"Debug: " << a << " size: " << a.size() << endl;
     }
 
     cout << a << endl;

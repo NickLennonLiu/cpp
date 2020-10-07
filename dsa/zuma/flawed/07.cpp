@@ -81,18 +81,20 @@ struct Node {
 } *HEAD, *END;
 
 
-//寻址 //river: 返回r应该插入的节点，并将cur_rank设置为r在该节点内的rank（位置/偏移量）
+//寻址
 Node* findRank(int r, int& cur_rank)
 {
 	Node* p = HEAD->next;	int count = 0;
 
-	while (count + p->size() < r + 1 && p != END)
-	{
-		count += p->size();
+	while (count <= r && p != END) {
+		if (r < count + p->size()) {
+			break;
+		}
+		count = count + p->size();
 		p = p->next;
 	}
 
-	if (p == END)			//尾部插入，直接加在末节点尾端 //river: 万一末节点满了呢？还有为何是加在尾端？//似乎没啥问题...
+	if (p == END)			//尾部插入，直接加在末节点尾端
 	{
 		p = p->prev;
 		cur_rank = p->size();
@@ -153,19 +155,17 @@ int main()
 	char* a = new char[500005];
 	cin.getline(a, 500005, '\n');
 
-	int blockSize = sqrt(strlen(a));	// river: 分块数组大小
-	Node* nodes = new Node[10000];		// river: 最多可能1,000,000个珠子，现在申请10000个节点，真的可以吗？
-										// 大概是可以的，因为每个节点的默认大小是1000
-										// 但还是要注意一下
+	int blockSize = sqrt(strlen(a));
+	Node* nodes = new Node[10000];
 
 	//初始化分块数组
 	int top = 0;					//新节点在nodes中的编号
-	HEAD = new Node(1);	END = new Node(1);		// river: 初始化哨兵
+	HEAD = new Node(1);	END = new Node(1);
 	HEAD->next = END;	END->prev = HEAD;
 	Node* last = HEAD;				//依次向后衔接
 	for (int i = 0; i < strlen(a); i += blockSize)
 	{
-		Node* tmp = &nodes[top++];	// river: 当前节点
+		Node* tmp = &nodes[top++];
 		if (strlen(a) - i < blockSize)	//最后一个节点，大小为余数
 			tmp->balls.copyFrom(a, i, strlen(a));
 		else
@@ -178,16 +178,12 @@ int main()
 	END->prev = last;
 
 	//读入记录
-
-	int index, head, tail, m, count, cur_rank = 0;	
-	char value;	
-	Node* who, * lParent, * rParent;
-
+	int index, head, tail, m, count, cur_rank = 0;	char value;	Node* who, * lParent, * rParent;
 	scanf("%d", &m);
 	while (m--)
 	{
 		scanf("%d%*c%c", &index, &value);
-		if (HEAD->next == END)			// river: 若当前序列为空
+		if (HEAD->next == END)
 		{
 			Node* tmp = &nodes[top++];
 			HEAD->next = tmp;
@@ -199,73 +195,50 @@ int main()
 		}
 
 		who = findRank(index, cur_rank);
+		who->balls.insert(cur_rank, value);
 		head = cur_rank - 1;	tail = cur_rank;	count = 0;
 		checkLeft(who, lParent, head, count, value);	//检查后，保证0<=head<=lParent->size()-1
 		checkRight(who, rParent, tail, count, value);	//检查后，保证0<=tail<=rParent->size()-1
 
-		//判断是否会是连锁反应的开端
-		if (count < 2)
-		{
-			who->balls.insert(cur_rank, value);
-		}
 		//连环相消
-		else
-		{
-			int count1 = 0;	
-			Node* start = lParent, * end = rParent;	
-			char left = char(1), right = char(2);
-			
-			if (lParent->size() != 0)
-				left = lParent->balls[head];
-			if (rParent->size() != 0)
-				right = rParent->balls[tail];
-			//寻找相消的开头、结束节点
-			while (left == right)
-			{
-				lParent = start;	rParent = end;	count1 = 0;
-				int iniHead = head, iniTail = tail;	// river: 在head和tail向外拓张之前，先保存头和尾（rank）
-				checkLeft(lParent, start, head, count1, left);
-				checkRight(rParent, end, tail, count1, right);
-				if (count1 < 3)	//连环结束,将头尾指针放回
-				{
-					head = iniHead;	tail = iniTail;
-					start = lParent;	end = rParent;
-					break;
-				}
-				if (start->size() != 0)
-				{
-					left = start->balls[head];
-					cout << "debug: left: "<< left << endl;
-				}
-					
-				if (end->size() != 0)
-				{
-					right = end->balls[tail];
-					cout << "debug: right: " << left << endl;
-				}
-					
-			}
-			//找到 [head,tail)，即将head向右挪动一格
-			while (head + 1 >= start->size())		//确保head不会走到 END:前提已经满足必定有相消位
-			{
-				start = start->next;
-				head = -1;
-			}
-			head++;
+		if (count <= 2) continue;
 
-			if (start == end)					//位于同一节点，直接移除
+		Node* start = lParent, * end = rParent;
+		char left = lParent->balls[head];
+		char right = rParent->balls[tail];
+		//寻找相消的开头、结束节点
+		while (left == right)
+		{
+			lParent = start;	rParent = end;	count = 0;
+			int iniHead = head, iniTail = tail;
+			checkLeft(lParent, start, head, count, left);
+			checkRight(rParent, end, tail, count, right);
+			if (count < 3)	//连环结束,将头尾指针放回
 			{
-				start->balls.remove(head, tail);
-				cout << "debug: remove part in the same node" << endl;
+				head = iniHead;	tail = iniTail;
+				start = lParent;	end = rParent;
+				break;
 			}
-			else
-			{									//位于不同节点，将中间节点从链表中移除
-				cout << "debug: remove part in the different nodes" << endl;
-				start->balls.remove(head, start->size());
-				end->balls.remove(0, tail);
-				start->next = end;
-				end->prev = start;
-			}
+			left = start->balls[head];
+			right = end->balls[tail];
+		}
+
+		//找到 [head,tail)，即将head向右挪动一格
+		head = head + 1;
+		while (head >= start->size())		//确保head不会走到 END:前提已经满足必定有相消位
+		{
+			start = start->next;
+			head = 0;
+		}
+
+		if (start == end)					//位于同一节点，直接移除
+			start->balls.remove(head, tail);
+		else
+		{									//位于不同节点，将中间节点从链表中移除
+			start->balls.remove(head, start->size());
+			end->balls.remove(0, tail);
+			start->next = end;
+			end->prev = start;
 		}
 	}
 

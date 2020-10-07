@@ -10,14 +10,15 @@ void play(int rank) {
     int right = rank;
     char color = a[rank];
 
-    while (left > 0 && a[left] == color) --left;    //  终止条件：left = 0或者a[left] != color
-    while (right < a.size() && a[right] == color) ++right;  
+    while (left >= 0 && a[left] == color) --left;
+    left += 1;
+    while (right < a.size() && a[right] == color) ++right;
 
     int size = right - left;
     if (size >= 3) {
         a.erase(left, size);
 
-        if (left >= 0 && left < a.size()) {         //  
+        if (left < a.size()) {
             play(left);
         }
     }
@@ -31,7 +32,7 @@ int main() {
     int rank; char color;
     for (int i = 0; i < m; ++i) {
         cin >> rank >> color;
-        a.insert(a.cbegin() + min(rank, (int)a.size()), color);
+        a.insert(a.cbegin() + rank, color);
         play(rank);
     }
 

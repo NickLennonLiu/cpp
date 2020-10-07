@@ -10,16 +10,20 @@ void play(int rank) {
     int right = rank;
     char color = a[rank];
 
-    while (left > 0 && a[left] == color) --left;    //  终止条件：left = 0或者a[left] != color
-    while (right < a.size() && a[right] == color) ++right;  
+    while (left >= 0 && a[left] == color) --left;
+    left += 1;
+    while (right < a.size() && a[right] == color) ++right;
 
     int size = right - left;
     if (size >= 3) {
         a.erase(left, size);
 
-        if (left >= 0 && left < a.size()) {         //  
-            play(left);
-        }
+        int next;
+        if (left - 1 >= 0) next = left - 1;
+        else if (left < a.size()) next = left;
+        else return;
+
+        play(next);
     }
 }
 

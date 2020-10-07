@@ -1,7 +1,6 @@
 #include <iostream>
 using namespace std;
 
-// 归并排序
 void mergeSort(int *s, int *t)
 {
     if (s == t || s == t - 1)
@@ -23,7 +22,6 @@ void mergeSort(int *s, int *t)
     delete[] tmp;
 }
 
-// 读入int
 inline int getint()
 {
     int result = 0;
@@ -38,7 +36,6 @@ inline int getint()
     return result;
 }
 
-// 读入unsigned int
 inline unsigned int getuint()
 {
     unsigned int result = 0;
@@ -54,28 +51,27 @@ inline unsigned int getuint()
 }
 
 // 二分查找，返回区间内不大于e的最大者
-int binSearch(int s[], int lo, int hi, int e)
+int binSearch(int s[], int lo, int hi, float e)
 {
     while (lo < hi)
     {
         int mid = (lo + hi)  >> 1;
-        if (e < s[mid])
-            hi = mid;
+        if (e > s[mid])
+            lo = mid+1;
         else
-            lo = mid + 1;
+            hi = mid;
     }
     return lo - 1;
 }
 
-// 区间最大值队列
 class riskQueue
 {
-    int *maxindex;      // 记录最大感染数对应的日期
-    int front, rear, size;  // 队列头、尾、长度
+    int *maxindex;
+    int front, rear, size;
 
 public:
-    int *infected;      // 记录每天的感染数目
-    riskQueue(int n)    // 初始化
+    int *infected;
+    riskQueue(int n)
         : front(0), rear(0), size(n)
     {
         maxindex = new int[size + 1];
@@ -84,26 +80,27 @@ public:
         front = rear = 0;
         maxindex[rear++] = 0;
     }
-    ~riskQueue()        // 析构函数
+    ~riskQueue()
     {
         delete[] maxindex;
         delete[] infected;
     }
-    int getMax(int L)   // 获得起始为第L天至今的最大感染数
+    int getMax(int L)
     {
-        while(front < rear && maxindex[front] < L) front++; // 出队直到最大值对应的起始日期在L以后
+        while(front < rear && maxindex[front] < L) front++;
         return infected[maxindex[front]];
     }
-    void enqueue_by_index(int idx)  // 将第idx天的感染数从尾部入队
+    void enqueue_by_index(int idx)
     {
-        while(front < rear && infected[maxindex[rear-1]] <= infected[idx])  // 将感染数小于当天感染数的日期从尾部出队
-            rear--;                                                         // 直到遇到比当天感染数大的日期
-        maxindex[rear++] = idx;                                             // 再入队
+        while(front < rear && infected[maxindex[rear-1]] <= infected[idx])
+            rear--;
+        maxindex[rear++] = idx;
     }
 };
 
 int n, T;
-unsigned int mi, p, q;
+unsigned int mi;
+float p,q;
 int reference[1000001];
 
 int main()
@@ -125,11 +122,10 @@ int main()
     T = getint();
     for (int i = 0; i < T; i++)
     {
-        p = getuint();
-        q = getuint();
+        scanf("%f %f",&p,&q);
         int low, middle;
-        low = binSearch(reference, 1, n + 1, (int)((p > 2000000) ? 2000000 : (p - 1)));
-        middle = binSearch(reference, 1, n + 1, (int)((q > 2000000) ? 2000000 : (q - 1)));
+        low = binSearch(reference, 1, n + 1, p);
+        middle = binSearch(reference, 1, n + 1, q);
         printf("%u %u\n", low, middle - low);
     }
     return 0;

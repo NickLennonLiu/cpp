@@ -14,6 +14,10 @@ int main()
         scanf("%s %s", as, bs);
         int al = strlen(as), bl = strlen(bs);
 
+        // 初始化c[i]的每一个位
+        for (int i = 0; i < 1251; ++i)
+            c[i] = a[i] = b[i] = 0;
+
         // 将a转换为100000000进制
         alen = (al % 8) ? al / 8 + 1 : al / 8;
         int num = 0;
@@ -42,12 +46,10 @@ int main()
             }
             b[j] = num;
         }
-        // 初始化c[i]的每一个位
-        for (int i = 0; i < 1251; ++i)
-            c[i] = 0;
+        
 
-        clen = alen + blen - 1;
-        for (int i = 0; i < clen; ++i)
+        clen = alen + blen;
+        for (int i = 0; i < clen-1; ++i)
         {
             for (int j = 0; j <= i; ++j)    // 对于c的每一位，对可能的a和b的位置求积并求和
             {
@@ -59,12 +61,15 @@ int main()
                 c[i] %= 100000000;
             }
         }
-        clen += (c[clen] && 1);             // 如果发生了进位（最高位不为0）则更新c的位数
+        while(c[clen-1]==0 && clen > 1) clen--; // 去除前导零
 
         // 输出结果
         for (int j = clen - 1; j >= 0; --j)
         {
-            if(j == (clen-1) ) printf("%lld", c[j]);
+            if(j == (clen-1) ) 
+            {
+                printf("%lld", c[j]);
+            }
             else for (int k = 10000000; k; k /= 10)
             {
                 printf("%d", (c[j]/k)%10);

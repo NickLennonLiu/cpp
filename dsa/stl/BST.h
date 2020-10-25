@@ -12,18 +12,35 @@ public:
 
     binNodePosi(T) insert(const T& e)
     {
-        binNodePosi(T) cur = _root;
+        binNode<T> *cur = binTree<T>::_root, *temp = binTree<T>::_root;
         while(cur)
         {
-            if(cur->data > e) cur = cur->left;
-            else if(cur->data < e) cur = cur->right;
+            if(cur->data > e) 
+            {
+                temp = cur;
+                cur = cur->left;
+            }
+            else if(cur->data < e) 
+            {
+                temp = cur;
+                cur = cur->right;
+            }
             else break;
         }
-        return cur;
+        if(cur) 
+        {
+            ++cur->cnt;
+            return cur;
+        }
+        else 
+        {
+            if(temp->data < e) return temp->insertRightChild(e);
+            else return temp->insertLeftChild(e);
+        }
     }
     binNodePosi(T) find(const T& e)
     {
-        binNodePosi(T) cur = _root;
+        binNodePosi(T) cur = binTree<T>::_root;
         while(cur)
         {
             if(cur->data > e) cur = cur->left;

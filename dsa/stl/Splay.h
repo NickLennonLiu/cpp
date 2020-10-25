@@ -3,27 +3,31 @@
 
 
 template <typename T>
-class Splay : public binTree<T>
+class Splay : public BST<T>
 {
 public:
-    // return if x is x's parent's left child.
-    
-protected:
+    Splay()
+    : BST<T>()
+    {}
+
     void maintain(binNodePosi(T) x)
     {
-
+        if(!x->parent) binTree<T>::_root = x;
+        x->subtree_size = 1;
+        if(x->left) x->subtree_size += x->left->subtree_size;
+        if(x->right) x->subtree_size += x->right->subtree_size;
     }
     void clear(binNodePosi(T) x)
     {
-
+        delete x;
     }
     // 右旋
     void zig(binNodePosi(T) x)
     {
-        if(x == _root) return;
+        if(x == binTree<T>::_root) return;
         binNodePosi(T) father = x->parent;
         father->left = x->right;
-        x->right->father = father;
+        x->right->parent = father;
         if(father->parent)
         {
             if (binTree<T>::get(father))
@@ -40,7 +44,7 @@ protected:
     // 左旋
     void zag(binNodePosi(T) x)
     {
-        if(x == _root) return;
+        if(x == binTree<T>::_root) return;
         binNodePosi(T) father = x->parent;
         father->right = x->left;
         x->left->father = father;
@@ -59,9 +63,24 @@ protected:
     }
     void splay(binNodePosi(T) x)
     {
-        if(!x->parent || !x->parent->parent)
+        if(!x->parent) return;
+        if(!x->parent->parent)
         {
-            
+           get(x) ? zig(x) : zag(x); 
         }
+        if(get(x->parent) ^ get(x))
+        {
+            get(x) ? zig(x) : zag(x);
+            get(x) ? zig(x) : zag(x);
+        }
+        else 
+        {
+            get(x->parent) ? zig(x->parent) : zag(x->parent);
+            get(x->parent) ? zig(x) : zag(x);
+        }
+    }
+    binNodePosi(T) insert(const T& e)
+    {
+
     }
 };

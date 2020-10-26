@@ -7,9 +7,11 @@ struct node
     node *brother;
     int size;   // 子树规模
     int height; // 高度
+    bool lazytag;
     node(int idx, node* parent = nullptr, node* brother = nullptr)
     : index(idx), size(1), height(0), lc(nullptr)
     , rc(nullptr), parent(parent), brother(brother)
+    , lazytag(false)
     {
     }
     node* firstChild() const {return lc;}   // 第一个后代
@@ -26,5 +28,29 @@ struct node
     bool isFirstChild()
     {
         return parent && (parent->lc == this);
+    }
+    int getSize()
+    {
+        if(lazytag) update();
+        return size;
+    }
+    int getHeight()
+    {
+        if(lazytag) update();
+        return height;
+    }
+    void update()
+    {
+        lazytag = false;
+        node* ch = firstChild();
+        height = 0;
+        int newsize = 1;
+        while(ch)
+        {
+            newsize += ch->getSize();
+            height = (height > ch->getHeight() + 1) ? height : ch->getHeight() + 1;
+            ch = ch->nextSibling();
+        }
+        size = newsize;
     }
 };

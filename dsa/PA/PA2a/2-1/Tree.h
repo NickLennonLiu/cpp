@@ -22,13 +22,14 @@ struct Tree
     {
         return nodes[rank];
     }
+    // 分离子树
     node* secede(node* src)
     {
         if (src->isFirstChild()) // 如果是第一个后代，需要更新parent的lc
         {
             src->parent->lc = src->nextSibling();
             if (src->nextSibling())
-                src->nextSibling()->brother = src->brother;
+                src->nextSibling()->brother = nullptr;
         }
         else // 如果不是第一个后代，需要更新上一个兄弟节点的rc
         {
@@ -37,12 +38,13 @@ struct Tree
                 src->nextSibling()->brother = src->brother;
         }
         src->rc = nullptr;
-        updateAbove(src->parent);
+        //updateAbove(src->parent);
+        tagAbove(src->parent);
         return src;
     }
+    // 将子树添加到dst的对应位置
     void insertSubtree(node* src, node* dst, int rank)
     {
-        // 将子树添加到dst的对应位置
         src->parent = dst;
         if (!rank)
         {
@@ -63,7 +65,8 @@ struct Tree
             pre->rc = src;
             src->brother = pre;
         }
-        updateAbove(dst);
+        //updateAbove(dst);
+        tagAbove(dst);
     }
     void moveSubtree(node* src, node* dst,int rank)
     {
@@ -130,7 +133,14 @@ struct Tree
             x = x->parent; 
         }
     }
-
+    void tagAbove(node* x)
+    {
+        while(x)
+        {
+            x->lazytag = true;
+            x = x->parent;
+        }
+    }
     
     template <typename VST>
     void bfs(node* x, VST& func)

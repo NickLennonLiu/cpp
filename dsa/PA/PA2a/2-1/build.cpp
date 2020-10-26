@@ -8,11 +8,13 @@ Tree tree;
 int n,m;
 int op;
 
+// 测试用： 查看节点的信息（高度与子树规模）
 void viewNode(node* x)
 {
     cout << "Node: " << x->index << " " << x->height << " " << x->size << endl;
 }
 
+// 寻找节点
 node* findNode(Tree& tr)
 {
     int path_len, rank, len;
@@ -30,6 +32,7 @@ node* findNode(Tree& tr)
     return cur;
 }
 
+// 根据直接后代更新高度与规模（后序遍历用）
 void simpleUpdate(node* x)
 {
     node* ch = x->firstChild();
@@ -92,32 +95,17 @@ int main()
             case 0:
             {
                 node *src, *dst;
-                //int src_depth = findNode(tree, src);
-                //int dst_depth = findNode(tree, dst);
-                src = findNode(tree);
 
+                src = findNode(tree);
+                
                 tree.secede(src);
 
                 dst = findNode(tree);
+
                 int rank;
                 cin >> rank;
                 
                 tree.insertSubtree(src, dst, rank);
-
-                //tree.moveSubtree(src, dst, rank);
-                
-                /*
-                if(src_depth > dst_depth)
-                {
-                    tree.updateAbove(src_fa);
-                    tree.updateAbove(dst);
-                }
-                else
-                {
-                    tree.updateAbove(dst);
-                    tree.updateAbove(src_fa);
-                }
-                */
 
                 #ifdef DEBUG
                 // debug
@@ -130,12 +118,12 @@ int main()
             }
             case 1:
             {
-                cout << findNode(tree)->height << endl;
+                cout << findNode(tree)->getHeight() << endl;
                 break;
             }
             case 2:
             {
-                cout << findNode(tree)->size << endl;
+                cout << findNode(tree)->getSize() << endl;
                 break;
             }
         }

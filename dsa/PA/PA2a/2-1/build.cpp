@@ -15,6 +15,7 @@ void viewNode(node* x)
     cout << "Node: " << x->index << " " << x->height << " " << x->size << endl;
 }
 
+// 测试用：层次遍历多叉树，输出子树的高度与规模
 void debugBFS(Tree& tr)
 {
     cout << "---debug: bfs tree" << endl;
@@ -27,12 +28,19 @@ node* findNode(Tree& tr)
 {
     int path_len, rank, len;
     scanf("%d",&path_len);
-    node* cur = tr._root;
+    node* cur = tr._root, *nex;
     while(path_len--)
     {
         scanf("%d",&rank);
-        cur = (*cur)[rank];
+        nex = (*cur)[rank];
+        if(nex != nullptr)
+            cur = nex;
+        else
+            break;
     }
+    if(path_len>0)
+        while(path_len--)
+            scanf("%d",&rank);
     #ifdef DEBUG
     cout << "~~~debug: found node: " << cur->index << endl;
     #endif

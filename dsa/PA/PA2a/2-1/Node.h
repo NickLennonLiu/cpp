@@ -22,8 +22,8 @@ struct node
         node* child = lc;
         while(child && n--)
             child = child->rc;
-        if(!child) return this;
-        return child;
+        //if(!child) return this; // 如果找不到第n个后代，返回自身
+        return child;   // 如果找不到就返回空指针
     }
     bool isFirstChild()
     {

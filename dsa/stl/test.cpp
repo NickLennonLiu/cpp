@@ -2,13 +2,21 @@
 #include "Queap.h"
 using namespace std;
 
+
+class TEST
+{
+public:
+    void test(int i = 3);
+};
+
+void TEST::test(int i)
+{
+    cout << i << endl;
+}
+
 int main()
 {
-    Queap<int> q;
-    for(int i = 10; i > 0; --i)
-    {
-        q.enqueue(i);
-    }
-    cout << q.getMax() << endl;
+    TEST a;
+    a.test();
     return 0;
 }

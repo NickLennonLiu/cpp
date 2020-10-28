@@ -22,35 +22,33 @@ struct node
         node* child = lc;
         while(child && n--)
             child = child->rc;
-        //if(!child) return this; // 如果找不到第n个后代，返回自身
         return child;   // 如果找不到就返回空指针
     }
+    // 判断是否为第一个后代节点
     bool isFirstChild()
     {
         return parent && (parent->lc == this);
     }
+    // 获得子树规模
     int getSize()
     {
-        if(lazytag) update();
         return size;
     }
     int getHeight()
     {
-        if(lazytag) update();
+        if(lazytag) update();   // 如果需要更新则先更新
         return height;
     }
+    // 更新高度
     void update()
     {
         lazytag = false;
         node* ch = firstChild();
         height = 0;
-        int newsize = 1;
         while(ch)
         {
-            newsize += ch->getSize();
             height = (height > ch->getHeight() + 1) ? height : ch->getHeight() + 1;
             ch = ch->nextSibling();
         }
-        size = newsize;
     }
 };

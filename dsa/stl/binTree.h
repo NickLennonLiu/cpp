@@ -11,13 +11,17 @@ class binTree
 public:
     binNodePosi(T) _root;    // 树根节点
     int _size;
-    
+    int _height;
+    // 构造函数：空树
     binTree()
-    : _size(1)
-    {
-        _root = new binNode<T>();
-    }
+    : _size(0)
+    , _height(0)
+    {    }
+    
+    int size() const {return _size;}
+    int height() const {return _height;}
     binNodePosi(T) root() const {return _root;}
+    // 获得一个节点的兄弟
     binNodePosi(T) sibling(binNodePosi(T) x)
     {
         if(!x->parent) return nullptr;
@@ -93,11 +97,16 @@ public:
             }
         }
     }
+    // 析构函数，清空根子树
     ~binTree()
     {
         remove(_root);
     }
 protected:
+    void maintain()
+    {
+        //TODO
+    }
     // return if x is the left child of its father
     bool get(binNodePosi(T) x)
     {
@@ -114,7 +123,7 @@ protected:
         traverse_post_recursive(func,x->right);
         func(x);
     }
-    // clear the subtree of which the root is curNode
+    // 清空子树
     void remove(binNodePosi(T) curNode)
     {
         Stack<binNodePosi(T)> rmstack;

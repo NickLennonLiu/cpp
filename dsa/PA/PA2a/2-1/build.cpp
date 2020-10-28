@@ -6,6 +6,8 @@
 using namespace std;
 
 Tree tree;
+Stack<node*> post;
+Queue<node*> pre;
 int n,m;
 int op;
 
@@ -24,7 +26,7 @@ void debugBFS(Tree& tr)
 }
 
 // 寻找节点
-node* findNode(Tree& tr)
+inline node* findNode(Tree& tr)
 {
     int path_len, rank, len;
     scanf("%d",&path_len);
@@ -49,7 +51,7 @@ node* findNode(Tree& tr)
 }
 
 // 根据直接后代更新高度与规模（后序遍历用）
-void simpleUpdate(node* x)
+inline void simpleUpdate(node* x)
 {
     node* ch = x->firstChild();
     int height = 0;
@@ -91,7 +93,7 @@ int main()
         }
     }
 
-    tree.traverse_post(tree._root, simpleUpdate);
+    tree.traverse_post(tree._root, simpleUpdate,post, pre);
 
     #ifdef DEBUG
     debugBFS(tree);

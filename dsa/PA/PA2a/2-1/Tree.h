@@ -10,14 +10,24 @@ struct Tree
 {
     node* nodes[1000001];
     node* _root;
+    int _size;
+    // 初始化，给n个节点分配内存
     void init(int size)
     {
-        for(int i = 1; i <= size; i++)
+        _size = size;
+        for(int i = 1; i <= size; ++i)
         {
             nodes[i] = new node(i);
         }
         _root = nodes[1];
     }
+    // 析构函数
+    ~Tree()
+    {
+        for(int i = 1; i <= _size; ++i)
+            delete nodes[i];
+    }
+    // 按序号获得节点
     node*& operator[](int rank)
     {
         return nodes[rank];
@@ -25,6 +35,7 @@ struct Tree
     // 分离子树
     node* secede(node* src)
     {
+        if(src->lazytag) src->update();
         if (src->isFirstChild()) // 如果是第一个后代，需要更新parent的lc
         {
             src->parent->lc = src->nextSibling();
@@ -33,13 +44,17 @@ struct Tree
         }
         else // 如果不是第一个后代，需要更新上一个兄弟节点的rc
         {
-            src->prevSibling()->rc = src->rc;
+            src->brother->rc = src->rc;
             if (src->nextSibling())
                 src->nextSibling()->brother = src->brother;
         }
         src->rc = nullptr;
-        //updateAbove(src->parent);
-        tagAbove(src->parent);
+        src->brother = nullptr;
+
+        updateSize(src->parent, -(src->size));
+        if(src->height + 1 == src->parent->height)
+            tagAbove(src->parent);
+        src->parent = nullptr;
         return src;
     }
     // 将子树添加到dst的对应位置
@@ -65,19 +80,33 @@ struct Tree
             pre->rc = src;
             src->brother = pre;
         }
-        //updateAbove(dst);
-        tagAbove(dst);
+        updateSize(dst, src->size);
+        if(src->height + 1 > dst->height)
+            tagAbove(dst);
     }
     
+    // 将x及以上的都打上lazytag
     void tagAbove(node* x)
     {
         while(x)
         {
+            if(x->lazytag) break;   // 如果x已经被打上lazytag，说明x的祖先都已经被打上了lazytag
             x->lazytag = true;
             x = x->parent;
         }
     }
-    
+
+    // 更新子树规模
+    void updateSize(node* x, int delta)
+    {
+        while(x)
+        {
+            x->size += delta;
+            x = x->parent;
+        }
+    }
+
+    // 层级遍历
     template <typename VST>
     void bfs(node* x, VST& func)
     {
@@ -96,11 +125,10 @@ struct Tree
         }
     }
 
+    // 后序遍历
     template <typename VST>
-    void traverse_post(node* x, VST& func)
+    void traverse_post(node* x, VST& func, Stack<node*>& post, Queue<node*>& pre)
     {
-        Stack<node*> post;
-        Queue<node*> pre;
         if(!x) return;
         pre.enqueue(x);
         node* cur;

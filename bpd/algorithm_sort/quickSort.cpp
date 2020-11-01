@@ -10,6 +10,6 @@ void quickSort(int * s, int* t){
         if(l!=r) *(r--)=*(l);
     }
     *(l) = key;
-    quickSort(s,l);
-    quickSort(l+1,t);
+    quickSort(l + 1, t);
+    quickSort(s, l);
 }

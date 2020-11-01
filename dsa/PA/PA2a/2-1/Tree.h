@@ -38,15 +38,15 @@ struct Tree
         if(src->lazytag) src->update();
         if (src->isFirstChild()) // 如果是第一个后代，需要更新parent的lc
         {
-            src->parent->lc = src->nextSibling();
-            if (src->nextSibling())
-                src->nextSibling()->brother = nullptr;
+            src->parent->lc = src->rc;
+            if (src->rc)
+                src->rc->brother = nullptr;
         }
         else // 如果不是第一个后代，需要更新上一个兄弟节点的rc
         {
             src->brother->rc = src->rc;
-            if (src->nextSibling())
-                src->nextSibling()->brother = src->brother;
+            if (src->rc)
+                src->rc->brother = src->brother;
         }
         src->rc = nullptr;
         src->brother = nullptr;
@@ -116,7 +116,7 @@ struct Tree
         {
             x = Q.dequeue();
             func(x);
-            node* c = x->firstChild();
+            node* c = x->lc;
             while(c)
             {
                 Q.enqueue(c);
@@ -129,18 +129,23 @@ struct Tree
     template <typename VST>
     void traverse_post(node* x, VST& func, Stack<node*>& post, Queue<node*>& pre)
     {
-        if(!x) return;
+        if(!x) return ;
         pre.enqueue(x);
         node* cur;
+        int tempsize;
         while(!pre.empty())
         {
-            cur = pre.dequeue();
-            post.push(cur);
-            node* ch = cur->firstChild();
-            while(ch)
+            tempsize = pre.size();
+            while(tempsize--)
             {
-                pre.enqueue(ch);
-                ch = ch->nextSibling();
+                cur = pre.dequeue();
+                post.push(cur);
+                node* ch = cur->lc;
+                while(ch)
+                {
+                    pre.enqueue(ch);
+                    ch = ch->rc;
+                }
             }
         }
         while(!post.empty())

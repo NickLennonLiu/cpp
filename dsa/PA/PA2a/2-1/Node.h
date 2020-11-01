@@ -19,6 +19,7 @@ struct node
     node* prevSibling() const {return brother;} // 上一个兄弟节点
     node* operator[](int n)  // 返回第n个后代
     {
+        if(n < 0) return nullptr;
         node* child = lc;
         while(child && n--)
             child = child->rc;
@@ -43,12 +44,14 @@ struct node
     void update()
     {
         lazytag = false;
-        node* ch = firstChild();
+        node* ch = lc;
         height = 0;
+        int temp;
         while(ch)
         {
-            height = (height > ch->getHeight() + 1) ? height : ch->getHeight() + 1;
-            ch = ch->nextSibling();
+            temp = ch->getHeight() + 1;
+            height = (height > temp) ? height : temp;
+            ch = ch->rc;
         }
     }
 };

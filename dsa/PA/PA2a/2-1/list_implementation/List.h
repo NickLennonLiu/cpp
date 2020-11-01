@@ -1,6 +1,8 @@
 #pragma once
 
 #include "ListNode.h"
+#include <iostream>
+using namespace std;
 
 template <typename T>
 class List
@@ -17,13 +19,6 @@ public:
         header->pre = nullptr;
         trailer->pre = header;
         trailer->nex = nullptr;
-    }
-    List(ListNode<T>* pos, int n)
-    {
-        header = new ListNode<T>;  //创建头哨兵节点
-        trailer = new ListNode<T>; //创建尾哨兵节点
-        
-        
     }
     //List(T const* elems);
     ~List()
@@ -45,6 +40,7 @@ public:
     ListNode<T>* first() const {return header->nex;}
     ListNode<T>* last() const {return trailer->pre;}
     ListNode<T>* end() const {return trailer;}
+    ListNode<T>* begin() const {return header->nex;}
     T remove(ListNode<T>* pos)
     {
         len--;
@@ -62,19 +58,11 @@ public:
         ++len;
         return trailer->insertAsPre(e);
     }
-    void sort();
-protected:
-    void merge(ListNode<T>* B);
+    ListNode<T>* operator[](int n)
+    {
+        ListNode<T>* cur = first();
+        while(cur != trailer && n--)
+            cur = cur->nex;
+        return cur;
+    }
 };
-
-template <typename T>
-void List<T>::sort()
-{
-
-}
-
-template <typename T>
-void List<T>::merge(ListNode<T>* B)
-{
-
-}

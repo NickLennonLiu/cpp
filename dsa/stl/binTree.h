@@ -4,152 +4,122 @@
 #include "Stack.h"
 #include "Queue.h"
 
+#define sibling(p) /*兄弟*/ \
+    (isLChild(*(p)) ? (p)->parent->rc : (p)->parent->lc)
+
+#define uncle(x) /*叔叔*/ \
+    (isLChild(*((x)->parent)) ? (x)->parent->parent->rc : (x)->parent->parent->lc)
+
+#define FromParentTo(x) /*来自父亲的引用*/ \
+    (isRoot(x) ? _root : (isLChild(x) ? (x).parent->lc : (x).parent->rc))
+
 template <typename T>
 class binTree
 {
-    
-public:
+protected:
     binNodePosi(T) _root;    // 树根节点
     int _size;
     int _height;
-    // 构造函数：空树
-    binTree()
-    : _size(0)
-    , _height(0)
-    {    }
+    virtual int updateHeight(binNodePosi(T) x)
+    {
+        int height = -1;
+        if(lc) height = max(height, lc->height);
+        if(rc) height = max(height, rc->height);
+        return x->height = 1 + height;
+    }
+    void updateHeightAbove(binNodePosi(T) x)
+    {
+        while(x)
+        {
+            updateHeight(x);
+            x = x->parent;
+        }
+    }
+public:
     
+    // 构造函数：空树
+    binTree(): _size(0), _height(0), _root(nullptr) { }
+    ~binTree() { if (0 < _size) remove(_root); }
     int size() const {return _size;}
     int height() const {return _height;}
     binNodePosi(T) root() const {return _root;}
-    // 获得一个节点的兄弟
-    binNodePosi(T) sibling(binNodePosi(T) x)
+    binNodePosi(T) insertAsRoot( T const & e)
     {
-        if(!x->parent) return nullptr;
-        return (get(x)) ? x->parent->right : x->parent->left;
+        _size = 1;
+        return _root = new binNode<T>(e);
     }
-    // 前序遍历
-    template <typename VST>
-    void traverse_pre(VST& func)
+    binNodePosi(T) insertAsRC(binNodePosi(T) x, T const& e)
     {
-        Stack<binNodePosi(T)> trav;
-        if(!_root) return;
-        trav.push(_root);
-        while(!trav.empty())
-        {
-            binNodePosi(T) cur = trav.pop();
-            func(cur->data);
-            if(cur->right) trav.push(cur->right);
-            if(cur->left) trav.push(cur->left);
-        }
+        _size++;
+        x->insertAsRC(e);
+        updateHeightAbove(x);
+        return x->rc;
     }
-    // 中序遍历
-    template <typename VST>
-    void traverse_in(VST &func)
+    binNodePosi(T) insertAsLC(binNodePosi(T) x, T const &e)
     {
-        Stack<binNodePosi(T)> trav;
-        if (!_root)
-            return;
-        binNodePosi(T) cur = _root;
-        while(cur || !trav.empty())
-        {
-            if (cur)
-            {
-                trav.push(cur);
-                cur = cur->left;
-            } else 
-            {
-                cur = trav.pop();
-                func(cur->data);
-                trav.push(cur->right);
-            }
-        }
+        _size++;
+        x->insertAsLC(e);
+        updateHeightAbove(x);
+        return x->lc;
     }
-    // 后序遍历
-    template <typename VST>
-    void traverse_post(binNodePosi(T) x, VST &func)
+    binNodePosi(T) attachAsRC(binNodePosi(T) x, binTree<T>* & S)
     {
-        Stack<binNodePosi(T)> S;
-        if(x) S.push(x);
-        while(!S.empty())
-        {
-            if(S.top() == x->parent)
-                gotoLeftMostLeaf(S);
-            x = S.pop();
-            func(x->data);
-        }
-        if(!_root) return;
-        traverse_post_recursive(func,_root);
+        if(x->rc = S->_root)
+            x->rc->parent = x;
+        _size += S->_size;
+        updateHeightAbove(x);
+        S->_root = nullptr;
+        S->_size = 0;
+        delete S;
+        return x;
     }
-    // 层级遍历
-    template <typename VST>
-    void traverse_BFS(VST &func)
+    binNodePosi(T) attachAsLC(binNodePosi(T) x, binTree<T> *&S)
     {
-        Queue<binNodePosi(T)> queue;
-        queue.push_back(_root);
-        while(!queue.empty())
-        {
-            binNodePosi(T) cur = queue.pop_front();
-            if(cur)
-            {
-                func(cur->data);
-                queue.push_back(cur->left);
-                queue.push_back(cur->right);
-            }
-        }
+        if (x->lc = S->_root)
+            x->lc->parent = x;
+        _size += S->_size;
+        updateHeightAbove(x);
+        S->_root = nullptr;
+        S->_size = 0;
+        delete S;
+        return x;
     }
-    // 析构函数，清空根子树
-    ~binTree()
+    int remove( binNodePosi(T) x)
     {
-        remove(_root);
+        FromParentTo(*x) = nullptr;
+        updateHeightAbove(x->parent);
+        int n = removeAt(x);
+        _size -= n;
+        return n;
     }
+    binTree<T>* secede(binNodePosi(T) x)
+    {
+        FromParentTo(*x) = nullptr;
+        updateHeightAbove(x->parent);
+        binTree<T>* S = new binTree<T>;
+        S->_root = x;
+        x->parent = nullptr;
+        S->_size = x->size();
+        _size -= S->_size;
+        return S;
+    }
+    template <typename VST> //操作器
+    void travLevel ( VST& visit ) { if ( _root ) _root->travLevel ( visit ); } //层次遍历
+    template <typename VST> //操作器
+    void travPre ( VST& visit ) { if ( _root ) _root->travPre ( visit ); } //先序遍历
+    template <typename VST> //操作器
+    void travIn ( VST& visit ) { if ( _root ) _root->travIn ( visit ); } //中序遍历
+    template <typename VST> //操作器
+    void travPost ( VST& visit ) { if ( _root ) _root->travPost ( visit ); } //后序遍历
 protected:
-    void maintain()
-    {
-        //TODO
-    }
-    // return if x is the left child of its father
-    bool get(binNodePosi(T) x)
-    {
-        if (!x->parent)
-            return false;
-        return x->parent->left == x;
-    }
-    // 递归实现后序遍历
-    template <typename VST>
-    void traverse_post_recursive(VST& func, binNodePosi(T) x)
-    {
-        if(!x) return;
-        traverse_post_recursive(func,x->left);
-        traverse_post_recursive(func,x->right);
-        func(x);
-    }
-    // 清空子树
-    void remove(binNodePosi(T) curNode)
-    {
-        Stack<binNodePosi(T)> rmstack;
-        rmstack.push(curNode);
-        while(!rmstack.empty())
-        {
-            binNodePosi(T) cur = rmstack.pop();
-            if(cur->left) rmstack.push(cur->left);
-            if(cur->right) rmstack.push(cur->right);
-            delete cur;
-        }
-    }
-    // 后序遍历所需，查找当前栈顶节点对应的最左端后代节点
-    template <typename T> 
-    void gotoLeftMostLeaf( Stack<binNodePosi(T)> & S)
-    {
-        while( binNodePosi(T) x = S.top())
-        {
-            if(x->left)
-            {
-                if(x->right)
-                    S.push(x->right);
-                S.push(x->left);
-            } else
-                S.push(x->right);
-        }
-        S.pop();
-    }
+   
 };
+
+template <typename T>
+static int removeAt(binNodePosi(T) x)
+{
+    if (!x) return 0;
+    int n = 1 + removeAt(x->lc) + removeAt(x->rc);
+    /* 此处需要释放 x->data和 x的空间*/
+    return n;
+}

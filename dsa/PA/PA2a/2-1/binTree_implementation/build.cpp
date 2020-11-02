@@ -31,14 +31,13 @@ inline node* findNode(Tree& tr)
     int path_len, rank;
     scanf("%d",&path_len);
     node* cur = tr._root, *nex;
-    while(path_len--)
+    while(cur && path_len--)
     {
         scanf("%d",&rank);
         nex = (*cur)[rank];
-        if(nex != nullptr)
-            cur = nex;
-        else
+        if(nex == nullptr)
             break;
+        cur = nex;
     }
     if(path_len>0)
         while(path_len--)
@@ -93,6 +92,7 @@ int main()
         }
     }
 
+    // 树的高度的初始化 
     tree.traverse_post(tree._root, simpleUpdate,post, pre);
 
     #ifdef DEBUG

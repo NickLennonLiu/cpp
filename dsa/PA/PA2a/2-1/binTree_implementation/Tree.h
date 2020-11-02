@@ -52,7 +52,8 @@ struct Tree
         src->brother = nullptr;
 
         updateSize(src->parent, -(src->size));
-        if(src->height + 1 == src->parent->height)
+        src->parent->lazytag = true;
+        if(src->height + 1 > src->parent->getHeight())
             tagAbove(src->parent);
         src->parent = nullptr;
         return src;

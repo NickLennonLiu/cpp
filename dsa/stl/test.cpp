@@ -1,17 +1,22 @@
 #include <iostream>
 
-#include "singlelist.h"
+#include "Trees/AVL.h"
 using namespace std;
 
+void viewNode(int i)
+{
+    cout << i << " ";
+}
 
 int main()
 {
-    List<int> a;
-    for(int i = 0; i < 10; i++)
-        a.insertAsLast(i);
-    for(int i = 0; i < 10 ; i+=2)
-        a.insert(a[i],i);
-    for(int i = 0; i < a.size() ; i++)
-        cout << a[i]->val << endl;
+    AVL<int> a;
+    a.insertAsRoot(0);
+    for(int i = 1;i <= 10; ++i)
+    {
+        a.insert(i);
+        a.travLevel(viewNode);
+        cout << endl;
+    }
     return 0;
 }

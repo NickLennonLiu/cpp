@@ -1,8 +1,8 @@
 #pragma once
 
 #include "binNode.h"
-#include "Stack.h"
-#include "Queue.h"
+#include "../Linear/Stack.h"
+#include "../Linear/Queue.h"
 
 #define sibling(p) /*兄弟*/ \
     (isLChild(*(p)) ? (p)->parent->rc : (p)->parent->lc)
@@ -11,7 +11,7 @@
     (isLChild(*((x)->parent)) ? (x)->parent->parent->rc : (x)->parent->parent->lc)
 
 #define FromParentTo(x) /*来自父亲的引用*/ \
-    (isRoot(x) ? _root : (isLChild(x) ? (x).parent->lc : (x).parent->rc))
+    (isRoot(x) ? binTree<T>::_root : (isLChild(x) ? (x).parent->lc : (x).parent->rc))
 
 template <typename T>
 class binTree
@@ -23,8 +23,8 @@ protected:
     virtual int updateHeight(binNodePosi(T) x)
     {
         int height = -1;
-        if(lc) height = max(height, lc->height);
-        if(rc) height = max(height, rc->height);
+        if(x->lc) height = (height > x->lc->height) ? height : x->lc->height;
+        if(x->rc) height = (height > x->rc->height) ? height : x->rc->height;
         return x->height = 1 + height;
     }
     void updateHeightAbove(binNodePosi(T) x)
@@ -111,7 +111,7 @@ public:
     void travIn ( VST& visit ) { if ( _root ) _root->travIn ( visit ); } //中序遍历
     template <typename VST> //操作器
     void travPost ( VST& visit ) { if ( _root ) _root->travPost ( visit ); } //后序遍历
-protected:
+
    
 };
 
@@ -121,5 +121,6 @@ static int removeAt(binNodePosi(T) x)
     if (!x) return 0;
     int n = 1 + removeAt(x->lc) + removeAt(x->rc);
     /* 此处需要释放 x->data和 x的空间*/
+    delete x;
     return n;
 }

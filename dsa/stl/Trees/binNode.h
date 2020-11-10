@@ -1,24 +1,27 @@
 #pragma once
-#include "Queue.h"
-#include "Stack.h"
+#include "../Linear/Queue.h"
+#include "../Linear/Stack.h"
 
 #define binNodePosi(T) binNode<T>*
-#define isRChild(x) (!isRoot(x) && (x) == (x)->parent->rc)
-#define isLChild(x) (!isRoot(x) && (x) == (x)->parent->lc)
+#define isRChild(x) (!isRoot(x) && (&(x) == (x).parent->rc))
+#define isLChild(x) (!isRoot(x) && (&(x) == (x).parent->lc))
 #define HasLChild(x) ((x).lc)
 #define HasRChild(x) ((x).rc)
-#define isRoot(x) (!((x)->parent))
+#define isRoot(x) (!((x).parent))
+#define stature(x) ((x) ? (x)->height : -1)
 
 typedef int Rank;
 
 template <typename T>
 class binNode
 {
+    
+public:
     T data;
     binNode<T> *parent, *lc, *rc;
     int height;
     int npl;
-public:
+
     binNode() : parent(NULL), lc(NULL), rc(NULL) ,height(0) {}
     binNode(T e, binNodePosi(T) parent = NULL, binNodePosi(T) lc = NULL, binNodePosi(T) rc = NULL, int h = 0)
     : parent(parent), lc(lc), rc(rc), height(h), data(e)    {}
@@ -41,7 +44,7 @@ public:
             s = rc;
             while(s->lc) s = s->lc;
         } else {
-            while(isRChild(s)) s = s->parent;
+            while(isRChild(*s)) s = s->parent;
             s = s->parent;
         }
         return s;
@@ -54,9 +57,10 @@ public:
             s = lc;
             while(s->rc) s = s->rc;
         } else {
-            while(isLChild(s)) s = s->parent;
+            while(isLChild(*s)) s = s->parent;
             s = s->parent;
         }
+        return s;
     }
     template <typename VST>
     void traversePre(VST& func)
@@ -152,7 +156,7 @@ void binNode<T>::travLevel(VST &visit)
     Q.enqueue(this);         //根节点入队
     while (!Q.empty())
     { //在队列再次变空之前，反复迭代
-        BinNodePosi(T) x = Q.dequeue();
+        binNodePosi(T) x = Q.dequeue();
         visit(x->data); //取出队首节点并访问之
         if (HasLChild(*x))
             Q.enqueue(x->lc); //左孩子入队

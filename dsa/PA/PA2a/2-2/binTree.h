@@ -1,8 +1,8 @@
 #pragma once
 
 #include "binNode.h"
-#include "../Linear/Stack.h"
-#include "../Linear/Queue.h"
+#include "Stack.h"
+#include "Queue.h"
 
 #define sibling(p) /*兄弟*/ \
     (isLChild(*(p)) ? (p)->parent->rc : (p)->parent->lc)

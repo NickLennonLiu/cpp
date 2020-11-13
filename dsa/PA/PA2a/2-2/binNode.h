@@ -1,6 +1,6 @@
 #pragma once
-#include "../Linear/Queue.h"
-#include "../Linear/Stack.h"
+#include "Queue.h"
+#include "Stack.h"
 
 #define binNodePosi(T) binNode<T>*
 #define isRChild(x) (!isRoot(x) && (&(x) == (x).parent->rc))

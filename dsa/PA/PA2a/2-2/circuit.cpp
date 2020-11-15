@@ -43,21 +43,27 @@ struct queue
 struct Node
 {
     Node()
-    : childs(0)
-    //, zero(nullptr)
-    //, one(nullptr)
-    , zero(-1)
+    : //childs(0)
+     zero(-1)
     , one(-1)
-    , cirs(nullptr)
+    //, cirs(nullptr)
+    , queueid(0)
     {}
-    queue *cirs;
-    int childs;
+    //queue *cirs;
+    int queueid;
+    //int childs;
     //Node *zero, *one;
     int zero, one;
 };
 
+int hasChild[23000000];
+
 Node memory[23000000];
 int applied = 0;
+
+//queue *leafs[5000010];
+queue leafs[500010];
+int leaf_cnt = 0;
 
 class Trie
 {
@@ -65,8 +71,6 @@ class Trie
 public:
     Trie()
     {
-        //root = new Node();
-        //root = &memory[applied++];
         root = applied++;
     }
     void insert(int id, char *a)
@@ -74,64 +78,68 @@ public:
         Node* cur = memory + root;
         for(int i = 0; i < 64; ++i)
         {
-            cur->childs += 1;
+            //cur->childs += 1;
+            hasChild[cur - memory] += 1;
             if(a[i] - '0')
             {
                 if(-1 == cur->one)
                 {
-                    //cur->one = new Node();
-                    //cur->one = &memory[applied++];
                     cur->one = applied++;
                 }
-                //cur = cur->one;
                 cur = memory + cur->one;
             } else {
                 if(-1 == cur->zero)
                 {
-                    //cur->zero = new Node();
-                    //cur->zero = &memory[applied++];
                     cur->zero = applied++;
                 }
-                // cur = cur->zero;
                 cur = memory + cur->zero;
             }
         }
-        if(!cur->cirs)
-            cur->cirs = new queue();
-        cur->cirs->enqueue(id);
+        if(!cur->queueid)
+        {
+            //leafs[++leaf_cnt] = new queue();
+            cur->queueid = ++leaf_cnt;
+        }
+        //cur->cirs->enqueue(id);
+        leafs[cur->queueid].enqueue(id);
     }
     void remove(char *a)
     {
         Node *cur = memory + root;
         for (int i = 0; i < 64; ++i)
         {
-            cur->childs--;
+            //cur->childs--;
+            hasChild[cur - memory] --;
             if (a[i] - '0')
                 cur = memory + cur->one;
             else
                 cur = memory + cur->zero;
         }
-        cur->cirs->dequeue();
+        //cur->cirs->dequeue();
+        leafs[cur->queueid].dequeue();
     }
-    int find(char *a)
+    int find(int i, char *a)
     {
         Node *cur = memory + root;
         for(int i = 0; i < 64; ++i)
         {
             if(a[i] - '0')
             {
-                if(-1 != cur->zero && (memory[cur->zero].childs || i==63))
+                if(-1 != cur->zero && (hasChild[cur->zero]|| i==63))
                     cur = memory + cur->zero;
                 else
                     cur = memory + cur->one;   
             } else {
-                if(-1 != cur->one && (memory[cur->one].childs || i==63))
+                if(-1 != cur->one && (hasChild[cur->one]|| i==63))
                     cur = memory + cur->one;
                 else
                     cur = memory + cur->zero;
             }
         }
-        return cur->cirs->front();
+        //return (cur->cirs->front() == i) ? cur->cirs->header->next->next->val : cur->cirs->front();
+        return (leafs[cur->queueid].front() == i) 
+                ? leafs[cur->queueid].header->next->next->val 
+                : leafs[cur->queueid].front();
     }
 };
 
@@ -155,7 +163,7 @@ int main()
             trie.remove(cir[i-k-2]);
         if(i+k+1 < n)
             trie.insert(i+k+1, cir[i+k+1]);
-        printf("%d\n", trie.find(cir[i]));
+        printf("%d\n", trie.find(i,cir[i]));
     }
     return 0;
 }

@@ -1,4 +1,4 @@
-#include <iostream>
+//#include <iostream>
 #include <stdio.h>
 using namespace std;
 
@@ -18,15 +18,16 @@ struct listnode
 struct queue
 {
     listnode *header, *last;
+    /*
     queue()
     {
         header = new listnode();
         last = header;
     }
+    */
     void enqueue(int e)
     {
-        last->next = new listnode(e);
-        last = last->next;
+        last = last->next = new listnode(e);
     }
     int front()
     {
@@ -38,37 +39,35 @@ struct queue
         header = header->next;
         delete tmp;
     }
+    bool empty()
+    {
+        return header == last;
+    }
 };
 
 struct Node
 {
+    /*
     Node()
-    : //childs(0)
-     zero(-1)
-    , one(-1)
-    //, cirs(nullptr)
-    , queueid(0)
+    : zero(0)
+    , one(0)
+    , childs(0)
     {}
-    //queue *cirs;
-    int queueid;
-    //int childs;
-    //Node *zero, *one;
+    */
     int zero, one;
+    int childs;
 };
 
-int hasChild[23000000];
+Node memory[28000000];
+int applied = 1;
 
-Node memory[23000000];
-int applied = 0;
-
-//queue *leafs[5000010];
 queue leafs[500010];
 int leaf_cnt = 0;
 
 class Trie
 {
-    int root;
 public:
+    int root;
     Trie()
     {
         root = applied++;
@@ -78,45 +77,43 @@ public:
         Node* cur = memory + root;
         for(int i = 0; i < 64; ++i)
         {
-            //cur->childs += 1;
-            hasChild[cur - memory] += 1;
+            cur->childs++;
             if(a[i] - '0')
             {
-                if(-1 == cur->one)
+                if(0 == cur->one)
                 {
                     cur->one = applied++;
                 }
                 cur = memory + cur->one;
             } else {
-                if(-1 == cur->zero)
+                if(0 == cur->zero)
                 {
                     cur->zero = applied++;
                 }
                 cur = memory + cur->zero;
             }
         }
-        if(!cur->queueid)
+        if(0 == cur->one)
         {
-            //leafs[++leaf_cnt] = new queue();
-            cur->queueid = ++leaf_cnt;
+            cur->one = ++leaf_cnt;
+            leafs[cur->one].last = leafs[cur->one].header = new listnode();
         }
-        //cur->cirs->enqueue(id);
-        leafs[cur->queueid].enqueue(id);
+        leafs[cur->one].enqueue(id);
+        cur->childs++;
     }
     void remove(char *a)
     {
         Node *cur = memory + root;
         for (int i = 0; i < 64; ++i)
         {
-            //cur->childs--;
-            hasChild[cur - memory] --;
+            cur->childs--;
             if (a[i] - '0')
                 cur = memory + cur->one;
             else
                 cur = memory + cur->zero;
         }
-        //cur->cirs->dequeue();
-        leafs[cur->queueid].dequeue();
+        leafs[cur->one].dequeue();
+        cur->childs--;
     }
     int find(int i, char *a)
     {
@@ -124,22 +121,22 @@ public:
         for(int i = 0; i < 64; ++i)
         {
             if(a[i] - '0')
-            {
-                if(-1 != cur->zero && (hasChild[cur->zero]|| i==63))
+            {   
+                if(0 != cur->zero && (memory + cur->zero)->childs)
                     cur = memory + cur->zero;
                 else
                     cur = memory + cur->one;   
             } else {
-                if(-1 != cur->one && (hasChild[cur->one]|| i==63))
+                if(0 != cur->one && (memory + cur->one)->childs)
                     cur = memory + cur->one;
                 else
                     cur = memory + cur->zero;
             }
         }
-        //return (cur->cirs->front() == i) ? cur->cirs->header->next->next->val : cur->cirs->front();
-        return (leafs[cur->queueid].front() == i) 
-                ? leafs[cur->queueid].header->next->next->val 
-                : leafs[cur->queueid].front();
+        
+        return (leafs[cur->one].front() == i) 
+                ? leafs[cur->one].header->next->next->val 
+                : leafs[cur->one].front();
     }
 };
 
@@ -149,10 +146,9 @@ Trie trie;
 
 int main()
 {
-    cin >> n >> k;
-    cin.getline(cir[0],64);
+    scanf("%d %d",&n,&k);
     for(int i = 0; i < n; ++i)
-        cin.getline(cir[i],80);
+        scanf("%s", cir[i]);
     
     for(int i = 0; i <= k && i < n; ++i) // 注意预插入的时候留最后一个节点，到遍历的时候再插入
         trie.insert(i, cir[i]);

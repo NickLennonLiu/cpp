@@ -1,8 +1,8 @@
 #pragma once
 
 #include "binNode.h"
-#include "Stack.h"
-#include "Queue.h"
+#include "../Linear/Stack.h"
+#include "../Linear/Queue.h"
 
 #define sibling(p) /*兄弟*/ \
     (isLChild(*(p)) ? (p)->parent->rc : (p)->parent->lc)
@@ -12,6 +12,8 @@
 
 #define FromParentTo(x) /*来自父亲的引用*/ \
     (isRoot(x) ? binTree<T>::_root : (isLChild(x) ? (x).parent->lc : (x).parent->rc))
+
+#define max(x,y)  ((x) > (y) : (x) : (y))
 
 template <typename T>
 class binTree

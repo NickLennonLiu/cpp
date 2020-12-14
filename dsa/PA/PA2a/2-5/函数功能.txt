@@ -1,0 +1,31 @@
+结构
+observer
+yListNode
+yList
+    tmin, tmax len
+    header trailer
+xnode
+
+xnode *xtree[4000001]
+xnode *leafs[4000001]
+
+函数：
+// 自底向上建树：合并两个子节点的yList以生成父节点的yList
+void merge(yList &c, yList &a, yList &b)
+
+// 快排比较函数：观测站之间的比较，首先比x，然后再比y
+int xcmp(const void *a, const void *b)
+
+// 构建区间为[lo,hi]，储存位置为pos的xtree节点
+void construct(int lo, int hi, int pos)
+
+// 初始化函数
+void init(int n, const int *x, const int *y, const int *t)
+
+// 报告xtree上一个节点的yList
+bool report(xnode *node, int y1, int y2, int *tmin, int *tmax)
+
+// 查询函数
+void query(int x1, int x2, int y1, int y2, int *tmin, int *tmax)
+
+Todo: 重写列表：用数组实现

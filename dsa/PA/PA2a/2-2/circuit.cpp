@@ -1,4 +1,3 @@
-//#include <iostream>
 #include <stdio.h>
 using namespace std;
 
@@ -18,13 +17,6 @@ struct listnode
 struct queue
 {
     listnode *header, *last;
-    /*
-    queue()
-    {
-        header = new listnode();
-        last = header;
-    }
-    */
     void enqueue(int e)
     {
         last = last->next = new listnode(e);
@@ -47,15 +39,8 @@ struct queue
 
 struct Node
 {
-    /*
-    Node()
-    : zero(0)
-    , one(0)
-    , childs(0)
-    {}
-    */
-    int zero, one;
-    int childs;
+    int zero, one;  // 对应左孩子lc与右孩子rc
+    int childs;     // 终止节点数目
 };
 
 Node memory[28000000];

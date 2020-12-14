@@ -1,152 +1,286 @@
 #include <stdio.h>
 
-#define nmax 100010
-#define mmax 400010
-#define INT_MAX 2147483647
+#define nmax 800010
+#define mmax 800010
+#define MAX 2223372036854775807
 #define MOD 998244353
+#define parent(x) ((x) >> 1)
+#define lc(x) ((x) << 1)
+#define rc(x) (((x) << 1) | 1)
 
 int n,m;
-
-enum VStatus {
-    VISITED, DISCOVERED, UNDISCOVERED
-};
-enum EStatus
-{
-    
-};
+long long dis1[nmax], disn[nmax];
+long long spc1[nmax], spcn[nmax];
+long long edges[mmax][3];
 
 struct node
 {
     node* next;
-    int weight;
+    long long weight;
     int succ;
 };
 
 struct list
 {
-    node* root;
-    int first()
-    {
-        return root->next->succ;
-    }
-    int next(int x)
-    {
-        node* cur = root->next;
-        while(cur->succ != x)
-            cur = cur->next;
-        return cur->next->succ;
-    }
-    void insert(int x, int weight)
+    node* first;
+    node* last;
+    void insert(int x, long long weight)
     {
         node* n = new node;
         n->succ = x;
         n->weight = weight;
-        n->next = root->next;
-        root->next = n;
+        n->next = first;
+        if(!first) last = n;
+        first = n;
     }
-    int weightTo(int x)
+};
+
+struct heap
+{
+    int curnode;
+
+    int vid[mmax];
+    long long prio[mmax];
+
+    void init()
     {
-        node* cur = root->next;
-        while(cur->succ != x)
-            cur = cur->next;
-        return cur->next->weight;
+        curnode = 1;
+        for(int i = 0; i < mmax; ++i)
+        {
+            prio[i] = MAX;
+            vid[i] = 0;
+        }
+    }
+
+    // x < y
+    bool cmp(int x, int y)
+    {
+        if(vid[x] == vid[y])
+            return prio[x] < prio[y];
+        return prio[x] < prio[y];
+    }
+
+    void swap(int x, int y)
+    {
+        long long tp = prio[x];
+        int tv = vid[x];
+        prio[x] = prio[y];
+        vid[x] = vid[y];
+        prio[y] = tp;
+        vid[y] = tv;
+    }
+
+    void insert(int v, long long p)
+    {
+        prio[curnode] = p;
+        vid[curnode] = v;
+        int cur = curnode++;
+        while(cur > 1)
+        {
+            int j = parent(cur);
+            if(cmp(j,cur))
+                break;
+            swap(cur,j);            
+            cur = j;
+        }
+    }
+    void pop()
+    {
+        curnode -= 1;
+        swap(1,curnode);
+        vid[curnode] = 0;
+        prio[curnode] = MAX;
+        int cur = 1;
+        int j;
+        while(cur != (j = properparent(cur)))
+        {
+            swap(cur,j);
+            cur = j;
+        }
+    }
+    int properparent(int i)
+    {
+        int re = i;
+        if (vid[lc(i)] && cmp(lc(i), re))
+            re = lc(i);
+        if (vid[rc(i)] && cmp(rc(i), re))
+            re = rc(i);
+        return re;
+    }
+    int topvid()
+    {
+        return vid[1];
+    }
+    long long topprio()
+    {
+        return prio[1];
     }
 };
 
 struct graph
 {
-    int weight(int v, int u)
+    long long priority[nmax];
+    list edge[nmax];
+    char status[nmax];
+    heap dijkheap;
+
+    // 并查集
+    int zero[nmax];
+    int find(int v)
     {
-        return edge[v].weightTo(u);
+        int cur = v;
+        while (zero[cur] != cur)
+            cur = (zero[cur] = find(zero[cur]));
+        return zero[v];
     }
-    int insertEdge(int v, int u, int weight)
+    void makeunion(int from, int to)
     {
-        edge[v].insert(u,weight);
-        edge[u].insert(v,weight);
+        zero[find(from)] = find(to);
     }
-    int firstNbr(int s)
+
+    graph()
     {
-        return edge[s].first();
+        for(int i = 0; i < nmax; ++i)
+            zero[i] = i;
     }
-    int nextNbr(int s, int w)
+
+    // 下面的函数都是在并查集意义下进行
+    // 插入边
+    void insertEdge(int v, int u, long long weight)
     {
-        return edge[s].next(w);
+        if(find(v) == find(u))
+            return;
+        edge[find(v)].insert(find(u), weight);
+        edge[find(u)].insert(find(v), weight);
     }
-    template <typename PU>
-    void pfs(int s, PU prioUpdater)
+
+    void dijkstra(int s, long long *spc, long long *dis)
     {
+        dijkheap.init();
+        s = find(s);
         priority[s] = 0;
-        status[s] = VISITED;
-        parent[s] = -1;
+        status[s] = 1;
         while(1)
         {
-            for(int w = firstNbr(s); -1 < w; w = nextNbr(s, w))
-                prioUpdater(this, s, w);
-            for(int shortest = INT_MAX, w = 0; w < n; w++)
+            for(node* e = edge[s].first; e; e = e->next)
             {
-                if( UNDISCOVERED == status[w])
-                    if(shortest > priority[w])
-                    {
-                        shortest = priority(w);
-                        s = w;
-                    }
+                int w = e->succ;
+                if (status[w])
+                { // v的最短路径长度已经确定
+                    if(priority[w] == priority[s] + e->weight)// 但它的最短路有可能更新
+                        spc[w] = (spc[w] + spc[s]) % MOD;
+                    continue;
+                }
+                if (priority[w] > priority[s] + e->weight)
+                {
+                    priority[w] = priority[s] + e->weight;  // 作松弛
+                    dijkheap.insert(w, priority[w]);
+                    //printf("debug: insert %d, %lld\n", w, priority[w]);
+                    spc[w] = spc[s];
+                } 
+                else if (priority[w] == priority[s] + e->weight)
+                {
+                    spc[w] = (spc[w] + spc[s]) % MOD;
+                }
             }
-            if (VISITED == status[s]) break;
-            status[s] = VISITED;
-            // type(parent[s], s) = TREE; 对边的标记是否在这题中有必要？
+
+            if(dijkheap.curnode <= 1) break;
+            s = dijkheap.topvid();
+            while(status[s] && dijkheap.curnode > 1)
+            {
+                dijkheap.pop();
+                if(dijkheap.curnode <= 1)
+                    break;
+                s = dijkheap.topvid();
+            }
+            if(dijkheap.curnode <= 1 || status[s])
+                break;
+            
+            long long minprio = dijkheap.topprio();
+            while(dijkheap.curnode > 1 && dijkheap.topvid() == s)
+            {
+                dijkheap.pop();
+            }
+            if (status[s]) break;
+            status[s] = 1;
+            dis[s] = priority[s];
         }
     }
-    int query(int v, int u, int weight)
+
+    long long query(int v, int u, long long w)
     {
-
-    }
-    void dijkstra()
-    {
-
-    }
-    int priority[nmax];
-    int parent[nmax];
-    list edge[nmax];
-    VStatus status[nmax];
-};
-
-
-struct DijkPU
-{
-    void operator()(graph* g, int uk, int v)
-    {
-        if (UNDISCOVERED != g->status[v]){  // v的最短路径长度已经确定
-            // 但它的最短路有可能更新
-        }
-        if (g->priority[v] > g->priority[uk] + g->weight(uk, v))
+        v = find(v);
+        u = find(u);
+        long long end = dis1[find(n)];          // 原本的距离
+        long long new_dis1 = dis1[v] + disn[u] + w; // 新距离1
+        long long new_dis2 = disn[v] + dis1[u] + w; // 新距离2
+        long long ans = spc1[find(n)];          // 原本的最短距离对应路径数
+        if(new_dis1 < end || new_dis2 < end)    // 最短距离更新了
         {
-            g->priority[v] = g->priority[uk] + g->weight(uk, v);
-            g->parent[v] = uk;
+            if (new_dis1 == new_dis2)
+            {
+                return ((spc1[v] * spcn[u]) % MOD + (spcn[v] * spc1[u]) % MOD) % MOD;
+            }
+            else if(new_dis1 < new_dis2)
+                return (spc1[v] * spcn[u]) % MOD;
+            else
+                return (spcn[v] * spc1[u]) % MOD;
+        }
+        if (new_dis1 == end)
+            ans = (ans + (spc1[v] * spcn[u]) % MOD) % MOD;
+        if (new_dis2 == end)
+            ans = (ans + (spcn[v] * spc1[u]) % MOD) % MOD;
+        return ans;
+    }
+
+    void priority_flush()
+    {
+        for(int i = 0; i < nmax; ++i)
+        {
+            priority[i] = MAX;
+            status[i] = 0;
         }
     }
 };
 
 int q;
-int tv, tu, tw;
+long long tv, tu, tw;
 graph G;
 
 int main()
 {
     scanf("%d %d", &n,&m);
-
+    for(int i = 1; i <= n; i++)
+    {
+        dis1[i] = disn[i] = MAX;
+    }
+    
     for(int i = 0; i < m; i++)
     {
-        scanf("%d %d %d", &tv, &tu, &tw);
-        G.insertEdge(tv,tu,tw);
+        scanf("%lld %lld %lld", &edges[i][0], &edges[i][1], &edges[i][2]);
+        if(!edges[i][2])
+            G.makeunion(edges[i][0],edges[i][1]);
     }
+    for(int i = 0; i < m; ++i)
+        if (edges[i][2])
+            G.insertEdge(edges[i][0], edges[i][1], edges[i][2]);
 
-    G.dijkstra();
+    // 进行dijkstra
+    spc1[G.find(1)] = 1;
+    spcn[G.find(n)] = 1;
+    dis1[G.find(1)] = 0;
+    disn[G.find(n)] = 0;
+    G.priority_flush();
+    G.dijkstra(1,spc1,dis1);
+    
+    G.priority_flush();
+    G.dijkstra(n,spcn,disn);
 
     scanf("%d", &q);
     while(q--)
     {
-        scanf("%d %d %d", &tv, &tu, &tw);
-        printf("%d\n", G.query(tv, tu, tw));
+        scanf("%lld %lld %lld", &tv, &tu, &tw);
+        printf("%lld\n", G.query(tv, tu, tw));
     }
     return 0;
 }

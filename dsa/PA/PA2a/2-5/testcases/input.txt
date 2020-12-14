@@ -1,0 +1,25 @@
+10
+1 4 2
+3 5 2
+0 1 4
+-1 6 3
+2 9 3
+3 5 1
+5 0 2
+1 4 3
+1 8 2
+3 4 1
+
+            /*
+            swap(obs[mid],obs[hi]);
+            int x = obs[hi].x; q = lo - 1;
+            for (int j = lo; j < hi; ++j)
+            {
+                if (obs[j].x <= x)
+                {
+                    swap(obs[++q], obs[j]);
+                }
+            }
+            swap(obs[q + 1], obs[hi]);
+            q++;
+            */

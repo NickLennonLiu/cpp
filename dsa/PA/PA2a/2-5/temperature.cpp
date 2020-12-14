@@ -3,230 +3,156 @@
 
 using namespace std;
 
-#define MAX(x,y) (((x) < (y)) ? (y) : (x))
-#define MIN(x,y) (((x) > (y)) ? (y) : (x))
-#define lc(x) ((x) << 1 | 1)
-#define rc(x) ((x) << 1 + 2)
+#define omax 200010
+#define INT_MAX 2147483647
+#define INT_MIN -2147483648 
+#define MAX(x, y) (((x) < (y)) ? (y) : (x))
+#define MIN(x, y) (((x) > (y)) ? (y) : (x))
+#define lc(x) ((x) << 1)
+#define rc(x) (((x) << 1) | 1)
 #define parent(x) ((x) >> 1)
 
 struct observer
 {
     int x, y, t;
-}obs[200001];
+} obs[omax];
 
-struct yListNode
-{
-    observer ob;
-    yListNode *next, *prev;
-    yListNode()
-    {
-    }
-    yListNode(observer ob)
-        : ob(ob), next(nullptr), prev(nullptr)
-    {
-    }
-};
-
-struct yList
-{
-    int tmin, tmax, len;
-    yListNode *header, *trailer;
-    yList()
-    {
-        header = new yListNode();
-        trailer = new yListNode();
-        header->next = trailer;
-        trailer->prev = header;
-        tmin = -2147483648;
-        tmax = 2147483647;
-        len = 0;
-    }
-    yListNode *insertAtBack(yListNode *cur, observer ob)
-    {
-        yListNode *newnode = new yListNode(ob);
-        newnode->prev = cur;
-        newnode->next = cur->next;
-        cur->next->prev = newnode;
-        cur->next = newnode;
-        ++len;
-    }
-};
-
-struct xnode
-{
-    int key;
-    bool isLeaf;
-    yList yQuery;
-    xnode(int x, bool leaf = false)
-    : key(x), isLeaf(leaf)
-    {}
-};
-
-xnode* xtree[400001];
-
-xnode* leafs[400001];
-
-
-
-// Todo: 如果是双向链表，应该如何merge？
-void merge(yList& c, yList& a, yList& b)
-{
-    yListNode *na = a.header->next,
-              *nb = b.header->next,
-              *nc = c.header;
-    while(na != a.trailer && nb != b.trailer)
-    {
-        if(na->ob.y < nb->ob.y)
-        {
-            nc = c.insertAtBack(nc, na->ob);
-            na = na->next;
-        } else {
-            nc = c.insertAtBack(nc, nb->ob);
-            nb = nb->next;
-        }
-    }
-    while(na != a.trailer)
-    {
-        nc = c.insertAtBack(nc, na->ob);
-        na = na->next;
-    }
-    while(nb != b.trailer)
-    {
-        nc = c.insertAtBack(nc, nb->ob);
-        nb = nb->next;
-    }
-}
-
-int xcmp(const void* a, const void* b)
+// 快排比较函数：观测站之间的比较，首先比x，然后再比y
+int xcmp(const void *a, const void *b)
 {
     if (((observer *)a)->x == ((observer *)b)->x)
         return (((observer *)a)->y > ((observer *)b)->y) ? 1 : -1;
     return (((observer *)a)->x > ((observer *)b)->x) ? 1 : -1;
 }
 
-void construct(int lo, int hi, int pos)
+int cmp(const observer &a, const observer &b)
 {
-    // 递归基：叶节点
-    if (lo == hi)
-    {
-        xtree[pos] = leafs[lo];
+    if (a.x == b.x)
+        return a.y > b.y;
+    return a.x > b.x;
+}
+
+template <typename T, typename CMP>
+void quickSort(T *s, T *t, CMP &cmp)
+{
+    if (s == t - 1 || s == t)
         return;
+    T key = *s;
+    T *l = s, *r = t - 1;
+    while (l != r)
+    {
+        while (r != l && cmp(*r, key) > 0)
+            --r;
+        if (r != l)
+            *(l++) = *r;
+        while (l != r && cmp(key, *l) > 0)
+            ++l;
+        if (l != r)
+            *(r--) = *(l);
     }
-    int mid = (lo + hi) >> 1;
-    construct(lo, mid, lc(pos));
-    construct(mid + 1, hi, rc(pos));
-    xtree[pos] = new xnode(leafs[mid]->key);
-    //xtree[pos]->yQuery.header = merge(xtree[lc(pos)]->yQuery.header, xtree[rc(pos)]->yQuery.header);
-    merge(xtree[pos]->yQuery, xtree[lc(pos)]->yQuery, xtree[rc(pos)]->yQuery);
-    xtree[pos]->yQuery.tmax = MAX(xtree[lc(pos)]->yQuery.tmax, xtree[rc(pos)]->yQuery.tmax);
-    xtree[pos]->yQuery.tmin = MIN(xtree[lc(pos)]->yQuery.tmin, xtree[rc(pos)]->yQuery.tmin);
+    *(l) = key;
+    quickSort(l + 1, t, cmp);
+    quickSort(s, l, cmp);
 }
 
-void init(int n, const int *x, const int *y, const int *t)
+struct list
 {
-    for(int i = 0; i < n; ++i)
-    {
-        obs[i].x = x[i];
-        obs[i].y = y[i];
-        obs[i].t = t[i];
-    }
+    int start;
+    int end;
+    int tmin, tmax;
+};
 
-    qsort(obs,n,sizeof(observer),xcmp); // 按照横坐标对观测站排序
-    int leaf_cnt = 0;
-    leafs[0] = new xnode(obs[0].x,true);
-    //yListNode *lca = leafs[0]->yQuery.header->next = new yListNode(obs[0]);
-    yListNode *lca = leafs[0]->yQuery.insertAtBack(leafs[0]->yQuery.header, obs[0]);
-    leafs[0]->yQuery.tmax = leafs[0]->yQuery.tmin = obs[0].t;
-
-    for (int i = 1; i < n; ++i)
+struct node
+{
+    int key;
+    bool isLeaf;
+    list yquery;
+    bool report(int y1, int y2, int *tmin, int *tmax)
     {
-        if(obs[i].x != obs[i-1].x)
+        int start = yquery.start, end = yquery.end;
+        if (y1 <= obs[start].y && obs[end].y <= y2)
         {
-            leafs[++leaf_cnt] = new xnode(obs[i].x, true);
-            
-            lca = leafs[leaf_cnt]->yQuery.insertAtBack(leafs[leaf_cnt]->yQuery.header,obs[i]);
-            //lca = leafs[leaf_cnt]->yQuery.header->next = new yListNode(obs[i]);
-            
-            leafs[leaf_cnt]->yQuery.tmax = leafs[leaf_cnt]->yQuery.tmin = obs[i].t;
-        } else {
-            leafs[leaf_cnt]->yQuery.tmax = MAX(leafs[leaf_cnt]->yQuery.tmax, obs[i].t);
-            leafs[leaf_cnt]->yQuery.tmin = MIN(leafs[leaf_cnt]->yQuery.tmin, obs[i].t);
-            
-            lca = leafs[leaf_cnt]->yQuery.insertAtBack(lca, obs[i]);
-            //lca = lca->next = new yListNode(obs[i]);
+            *tmin = MIN(*tmin, yquery.tmin);
+            *tmax = MAX(*tmax, yquery.tmax);
+            return true;
         }
-    }
-    construct(0, leaf_cnt, 0);
-}
-
-bool report(xnode *node, int y1, int y2, int *tmin, int *tmax)
-{
-    yListNode *first = node->yQuery.header->next,
-              *last = node->yQuery.trailer->prev;
-    if (y1 <= first->ob.y && last->ob.y <= y2)
-    {
-        *tmin = MIN(*tmin, node->yQuery.tmin);
-        *tmax = MAX(*tmax, node->yQuery.tmax);
+        if (obs[end].y < y1 || obs[start].y > y2)
+            return false;
+        if (obs[end].y <= y2)
+        {
+            while (obs[end].y >= y1)
+            {
+                *tmin = MIN(*tmin, obs[end].t);
+                *tmax = MAX(*tmax, obs[end].t);
+                if (end == start)
+                    break;
+                end--;
+            }
+        }
+        else
+        {
+            while (obs[start].y <= y2)
+            {
+                *tmin = MIN(*tmin, obs[start].t);
+                *tmax = MAX(*tmax, obs[start].t);
+                if (start == end)
+                    break;
+                ++start;
+            }
+        }
         return true;
     }
-    if (last->ob.y < y1 || first->ob.y > y2)
-        return false;
-    if (last->ob.y <= y2)
-    {
-        while (last != node->yQuery.header && last->ob.y >= y1)
-        {
-            *tmin = MIN(*tmin, last->ob.t);
-            *tmax = MAX(*tmax, last->ob.t);
-            last = last->prev;
-        }
-    }
-    else
-    {
-        while (first != node->yQuery.trailer && first->ob.y <= y2)
-        {
-            *tmin = MIN(*tmin, first->ob.t);
-            *tmax = MAX(*tmax, first->ob.t);
-            first = first->next;
-        }
-    }
-    return true;
-}
+};
 
+node *xtree[omax << 1];
+node leafs[omax];
+//int node_applied = 0;
+
+// 查询函数
 void query(int x1, int x2, int y1, int y2, int *tmin, int *tmax)
 {
     bool found = false;
-    // 确定lca TODO:考虑lca为叶节点的情况
-    int lca = 0, key = xtree[lca]->key;
-    while(x1 < key && x2 < key
-        || x1 > key && x2 > key)
+    *tmin = INT_MAX;
+    *tmax = INT_MIN;
+    // 确定lca
+    int lca = 1, key = xtree[lca]->key;
+    while (!xtree[lca]->isLeaf && (x1 < key && x2 < key || x1 > key && x2 > key))
     {
         lca = (x1 < key) ? lc(lca) : rc(lca);
-        key = xtree[lca]->key; 
+        key = xtree[lca]->key;
+    }
+    if (xtree[lca]->isLeaf) // lca为叶节点的情况
+    {
+        if (xtree[lca]->key >= x1 && x2 >= xtree[lca]->key)
+            found = xtree[lca]->report(y1, y2, tmin, tmax);
+        if (!found)
+            *tmax = *tmin = -1;
+        return;
     }
     // 从lca开始往下报告 TODO：叶节点是否报告需要判断？
-    int cur = lca;
     // Left side: Ignore all right turns, report leaf and right subtree.
-    key = xtree[lca]->key;
-    while(!xtree[cur]->isLeaf)
+    int cur = lc(lca);
+    key = xtree[cur]->key;
+    while (!xtree[cur]->isLeaf)
     {
-        if(key < x1)
+        if (key < x1)
         {
             cur = rc(cur);
             key = xtree[cur]->key;
         }
         else
         {
-            found = report(xtree[rc(cur)],y1,y2,tmin,tmax);
+            found |= xtree[rc(cur)]->report(y1, y2, tmin, tmax);
             cur = lc(cur);
             key = xtree[cur]->key;
         }
     }
-    if(xtree[cur]->key >= x1)
-        found = report(xtree[cur], y1, y2, tmin, tmax);
+    if (xtree[cur]->key >= x1 && xtree[cur]->key <= x2)
+        found |= xtree[cur]->report(y1, y2, tmin, tmax);
 
     // Right side: Ignore all left turns, report leaf and left subtree.
-    cur = lca;
-    key = xtree[lca]->key;
+    cur = rc(lca);
+    key = xtree[cur]->key;
     while (!xtree[cur]->isLeaf)
     {
         if (x2 < key)
@@ -236,21 +162,95 @@ void query(int x1, int x2, int y1, int y2, int *tmin, int *tmax)
         }
         else
         {
-            found = report(xtree[lc(cur)], y1, y2, tmin, tmax);
+            found |= xtree[lc(cur)]->report(y1, y2, tmin, tmax);
             cur = rc(cur);
             key = xtree[cur]->key;
         }
     }
-    if(xtree[cur]->key <= x2)
-        found = report(xtree[cur], y1, y2, tmin, tmax);
-    if(!found)
+    if (xtree[cur]->key >= x1 && xtree[cur]->key <= x2)
+        found |= xtree[cur]->report(y1, y2, tmin, tmax);
+    if (!found)
     {
-        *tmin = 0;
-        *tmax = 0;
+        *tmin = *tmax = -1;
     }
 }
 
+void merge(list &dst, list &src1, list &src2)
+{
+    dst.start = src1.start;
+    dst.end = src2.end;
+    dst.tmax = MAX(src1.tmax, src2.tmax);
+    dst.tmin = MIN(src1.tmin, src2.tmin);
+}
 
+// 构建区间为[lo,hi]，储存位置为pos的xtree节点
+// lo和hi对应的是leafs数组的区间！
+void construct(int lo, int hi, int pos)
+{
+    //printf("constructed %d %d %d\n", lo, hi, pos);
+    // 递归基：叶节点
+    if (lo == hi)
+    {
+        xtree[pos] = &leafs[lo];
+        return;
+    }
+    int mid = lo + (hi - lo)/2;
+    construct(lo, mid, lc(pos));
+    construct(mid + 1, hi, rc(pos));
+    //xtree[pos] = new node(leafs[mid].key);
+    xtree[pos] = new node;
+    xtree[pos]->isLeaf = false;
+    xtree[pos]->key = leafs[mid].key;
+    merge(xtree[pos]->yquery, xtree[lc(pos)]->yquery, xtree[rc(pos)]->yquery);
+}
 
+void debug_tree(int i)
+{
 
+    //printf("debug: %d\n", xtree[i]->key);
+    if (xtree[i]->isLeaf)
+        return;
+    debug_tree(lc(i));
+    debug_tree(rc(i));
+}
 
+void init(int n, const int *x, const int *y, const int *t)
+{
+    for (int i = 0; i < n; ++i)
+    {
+        obs[i].x = x[i];
+        obs[i].y = y[i];
+        obs[i].t = t[i];
+    }
+
+    //qsort(obs, n, sizeof(observer), xcmp); // 按照横坐标对观测站排序
+    quickSort(obs, obs+n, cmp);
+
+    int lcnt = 0;
+    leafs[lcnt].key = obs[0].x;
+    leafs[lcnt].isLeaf = true;
+    leafs[lcnt].yquery.tmax = leafs[lcnt].yquery.tmin = obs[0].t;
+    leafs[lcnt].yquery.start = leafs[lcnt].yquery.end = 0;
+    //lcnt++;
+
+    for (int i = 0; i < n; ++i)
+    {
+        if (obs[i].x != obs[i - 1].x)
+        {
+            lcnt++;
+            leafs[lcnt].key = obs[i].x;
+            leafs[lcnt].isLeaf = true;
+            leafs[lcnt].yquery.tmax = leafs[lcnt].yquery.tmin = obs[i].t;
+            leafs[lcnt].yquery.start = leafs[lcnt].yquery.end = i;
+        }
+        else
+        {
+            leafs[lcnt].yquery.tmax = MAX(leafs[lcnt].yquery.tmax, obs[i].t);
+            leafs[lcnt].yquery.tmin = MIN(leafs[lcnt].yquery.tmin, obs[i].t);
+            leafs[lcnt].yquery.end = i;
+        }
+    }
+    //printf("debug lcnt %d\n", lcnt);
+    construct(0, lcnt, 1);
+    //debug(1);
+}
